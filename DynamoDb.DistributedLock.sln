@@ -23,6 +23,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		LICENSE = LICENSE
 		README.md = README.md
 		icon.png = icon.png
+		CLAUDE.md = CLAUDE.md
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DynamoDb.DistributedLock.Tests", "test\DynamoDb.DistributedLock.Tests\DynamoDb.DistributedLock.Tests.csproj", "{1D5ED003-9182-475F-8FAB-3701D2BC900C}"
