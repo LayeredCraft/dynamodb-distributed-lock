@@ -7,16 +7,8 @@
         <RootNamespace>DynamoDb.DistributedLock.Tests</RootNamespace>
         <TargetFrameworks>net8.0;net9.0</TargetFrameworks>
         <LangVersion>default</LangVersion>
-        <!--
-        To enable the Microsoft Testing Platform 'dotnet test' experience, add property:
-          <TestingPlatformDotnetTestSupport>true</TestingPlatformDotnetTestSupport>
-    
-        To enable the Microsoft Testing Platform native command line experience, add property:
-          <UseMicrosoftTestingPlatformRunner>true</UseMicrosoftTestingPlatformRunner>
-    
-        For more information on Microsoft Testing Platform support in xUnit.net, please visit:
-          https://xunit.net/docs/getting-started/v3/microsoft-testing-platform
-        -->
+        <TestingPlatformDotnetTestSupport>true</TestingPlatformDotnetTestSupport>
+        <UseMicrosoftTestingPlatformRunner>true</UseMicrosoftTestingPlatformRunner>
     </PropertyGroup>
     <PropertyGroup>
         <IsTestProject>true</IsTestProject>
@@ -33,14 +25,14 @@
     <ItemGroup>
         <PackageReference Include="AutoFixture.AutoNSubstitute" Version="4.18.1"/>
         <PackageReference Include="AutoFixture.Xunit3" Version="4.19.0"/>
-        <PackageReference Include="AwesomeAssertions" Version="9.0.0"/>
-        <PackageReference Include="Microsoft.Extensions.Configuration" Version="9.0.6" />
+        <PackageReference Include="AwesomeAssertions" Version="9.1.0"/>
+        <PackageReference Include="Microsoft.Extensions.Configuration" Version="9.0.7"/>
         <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.1"/>
         <PackageReference Include="NSubstitute" Version="5.3.0"/>
-        <PackageReference Include="xunit.v3" Version="2.0.3" />
-        <PackageReference Include="xunit.runner.visualstudio" Version="3.1.1">
-          <PrivateAssets>all</PrivateAssets>
-          <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        <PackageReference Include="xunit.v3" Version="3.0.0"/>
+        <PackageReference Include="xunit.runner.visualstudio" Version="3.1.3">
+            <PrivateAssets>all</PrivateAssets>
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
     </ItemGroup>
 
