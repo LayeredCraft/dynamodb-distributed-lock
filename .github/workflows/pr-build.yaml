@@ -17,4 +17,6 @@ jobs:
       runCdk: false
       useMtpRunner: true
       testDirectory: "test"
+      enableCodeCoverage: true
+      coverageThreshold: 80
     secrets: inherit
