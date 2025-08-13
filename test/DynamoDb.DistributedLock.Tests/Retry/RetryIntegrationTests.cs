@@ -31,7 +31,7 @@ public class RetryIntegrationTests
         var sut = new DynamoDbDistributedLock(dynamo, options);
 
         // Act
-        var result = await sut.AcquireLockAsync(resourceId, ownerId);
+        var result = await sut.AcquireLockAsync(resourceId, ownerId, TestContext.Current.CancellationToken);
 
         // Assert
         result.Should().BeFalse();
@@ -64,7 +64,7 @@ public class RetryIntegrationTests
         var sut = new DynamoDbDistributedLock(dynamo, options);
 
         // Act
-        var result = await sut.AcquireLockAsync(resourceId, ownerId);
+        var result = await sut.AcquireLockAsync(resourceId, ownerId, TestContext.Current.CancellationToken);
 
         // Assert
         result.Should().BeTrue();
@@ -90,7 +90,7 @@ public class RetryIntegrationTests
         var sut = new DynamoDbDistributedLock(dynamo, options);
 
         // Act
-        var result = await sut.AcquireLockAsync(resourceId, ownerId);
+        var result = await sut.AcquireLockAsync(resourceId, ownerId, TestContext.Current.CancellationToken);
 
         // Assert
         result.Should().BeFalse();
@@ -123,7 +123,7 @@ public class RetryIntegrationTests
         var sut = new DynamoDbDistributedLock(dynamo, options);
 
         // Act
-        var result = await sut.AcquireLockAsync(resourceId, ownerId);
+        var result = await sut.AcquireLockAsync(resourceId, ownerId, TestContext.Current.CancellationToken);
 
         // Assert
         result.Should().BeTrue();
@@ -180,7 +180,7 @@ public class RetryIntegrationTests
         var sut = new DynamoDbDistributedLock(dynamo, options);
 
         // Act
-        var result = await sut.AcquireLockHandleAsync(resourceId, ownerId);
+        var result = await sut.AcquireLockHandleAsync(resourceId, ownerId, TestContext.Current.CancellationToken);
 
         // Assert
         result.Should().NotBeNull();
@@ -209,7 +209,7 @@ public class RetryIntegrationTests
         var sut = new DynamoDbDistributedLock(dynamo, options);
 
         // Act
-        var result = await sut.AcquireLockAsync(resourceId, ownerId);
+        var result = await sut.AcquireLockAsync(resourceId, ownerId, TestContext.Current.CancellationToken);
 
         // Assert
         result.Should().BeFalse();

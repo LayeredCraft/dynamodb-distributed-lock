@@ -7,7 +7,11 @@ namespace DynamoDb.DistributedLock;
 /// </summary>
 public sealed class DynamoDbLockOptions
 {
+    /// <summary>
+    /// The default name of the configuration section for DynamoDB lock settings.
+    /// </summary>
     public const string DynamoDbLockSettings = "DynamoDbLock";
+    
     /// <summary>
     /// The name of the DynamoDB table to use.
     /// </summary>
