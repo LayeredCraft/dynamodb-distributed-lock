@@ -1,6 +1,6 @@
 # 🔒 DynamoDb.DistributedLock
 <!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
-[![All Contributors](https://img.shields.io/badge/all_contributors-1-orange.svg?style=flat-square)](#contributors-)
+[![All Contributors](https://img.shields.io/badge/all_contributors-2-orange.svg?style=flat-square)](#contributors-)
 <!-- ALL-CONTRIBUTORS-BADGE:END -->
 
 **DynamoDb.DistributedLock** is a lightweight .NET library for distributed locking using Amazon DynamoDB. It is designed for serverless and cloud-native applications that require coordination across services or instances.
@@ -253,6 +253,7 @@ Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/d
   <tbody>
     <tr>
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/ncipollina"><img src="https://avatars.githubusercontent.com/u/1405469?v=4?s=100" width="100px;" alt="Nick Cipollina"/><br /><sub><b>Nick Cipollina</b></sub></a><br /><a href="https://github.com/LayeredCraft/dynamodb-distributed-lock/commits?author=ncipollina" title="Code">💻</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/TylerReid"><img src="https://avatars.githubusercontent.com/u/2939992?v=4?s=100" width="100px;" alt="Tyler Reid"/><br /><sub><b>Tyler Reid</b></sub></a><br /><a href="https://github.com/LayeredCraft/dynamodb-distributed-lock/commits?author=TylerReid" title="Code">💻</a></td>
     </tr>
   </tbody>
 </table>
