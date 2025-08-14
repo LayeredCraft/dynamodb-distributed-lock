@@ -50,13 +50,11 @@ public class ExponentialBackoffRetryPolicyTests
         var sut = new ExponentialBackoffRetryPolicy(options);
         var operationCalled = 0;
 
-        var result = await sut.ExecuteAsync(
-            _ =>
+        var result = await sut.ExecuteAsync(_ =>
             {
                 operationCalled++;
                 return Task.FromResult(expectedResult);
-            },
-            _ => true);
+            }, _ => true, TestContext.Current.CancellationToken);
 
         result.Should().Be(expectedResult);
         operationCalled.Should().Be(1);
@@ -120,15 +118,13 @@ public class ExponentialBackoffRetryPolicyTests
         var sut = new ExponentialBackoffRetryPolicy(options);
         var operationCalled = 0;
 
-        var result = await sut.ExecuteAsync(
-            _ =>
+        var result = await sut.ExecuteAsync(_ =>
             {
                 operationCalled++;
                 if (operationCalled < 3)
                     throw new InvalidOperationException("Retry me");
                 return Task.FromResult(expectedResult);
-            },
-            _ => true);
+            }, _ => true, TestContext.Current.CancellationToken);
 
         result.Should().Be(expectedResult);
         operationCalled.Should().Be(3);
