@@ -49,6 +49,22 @@ Or bind from configuration:
 services.AddDynamoDbDistributedLock(configuration);
 ```
 
+If you need to customize the `IAmazonDynamoDB` client, you can pass in AWSOptions, or the configuration section name:
+
+```csharp
+services.AddDynamoDbDistributedLock(configuration, awsOptionsSectionName: "DynamoDb");
+// or configure AWSOptions manually
+var awsOptions = configuration.GetAWSOptions("DynamoDb");
+awsOptions.DefaultClientConfig.ServiceURL = "http://localhost:4566"; // use localstack for testing
+services.AddDynamoDbDistributedLock(options =>
+{
+    options.TableName = "my-lock-table";
+    options.LockTimeoutSeconds = 30;
+    options.PartitionKeyAttribute = "pk";
+    options.SortKeyAttribute = "sk";
+}, awsOptions);
+```
+
 ### appsettings.json
 ```json
 {

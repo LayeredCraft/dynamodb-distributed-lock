@@ -1,4 +1,6 @@
 using Amazon.DynamoDBv2;
+using Amazon.Extensions.NETCore.Setup;
+using Amazon.Runtime;
 using DynamoDb.DistributedLock.Extensions;
 using DynamoDb.DistributedLock.Tests.TestKit.Attributes;
 using AwesomeAssertions;
@@ -119,5 +121,40 @@ public class ServiceCollectionExtensionsTests
 
         options.PartitionKeyAttribute.Should().Be(partitionKey);
         options.SortKeyAttribute.Should().Be(sortKey);
+    }
+    
+    [Fact]
+    public void AddDynamoDbDistributedLock_WithActionAndAwsConfig_SetsUpServiceAndOptions()
+    {
+        // Arrange
+        var services = new ServiceCollection();
+        var awsOptions = new AWSOptions
+        {
+            DefaultClientConfig = { ServiceURL = "http://localhost/" },
+            // to allow the service client to be resolved without actual AWS credentials
+            Credentials = new AnonymousAWSCredentials(),
+        };
+
+        // Act
+        services.AddDynamoDbDistributedLock(options =>
+        {
+            options.TableName = "locks";
+            options.LockTimeoutSeconds = 45;
+        }, awsOptions);
+        
+        var provider = services.BuildServiceProvider();
+
+        // Assert
+        var lockService = provider.GetService<IDynamoDbDistributedLock>();
+        lockService.Should().NotBeNull();
+
+        var options = provider.GetRequiredService<IOptions<DynamoDbLockOptions>>().Value;
+        options.TableName.Should().Be("locks");
+        options.LockTimeoutSeconds.Should().Be(45);
+        options.PartitionKeyAttribute.Should().Be("pk");
+        options.SortKeyAttribute.Should().Be("sk");
+        
+        var dynamoDbClient = provider.GetRequiredService<IAmazonDynamoDB>();
+        dynamoDbClient.Config.ServiceURL.Should().Be("http://localhost/");
     }
 }
