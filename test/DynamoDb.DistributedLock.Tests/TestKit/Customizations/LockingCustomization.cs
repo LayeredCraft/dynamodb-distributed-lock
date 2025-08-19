@@ -13,6 +13,9 @@ public class LockingCustomization : ICustomization
     public void Customize(IFixture fixture)
     {
         fixture.Customize(new AutoNSubstituteCustomization());
+        
+        // add metrics customizations
+        fixture.AddMetrics();
 
         // 🔒 Inject a null-value IOptions<DynamoDbLockOptions> for specific test scenarios
         fixture.AddNullDynamoDbLockOptions();

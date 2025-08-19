@@ -225,6 +225,32 @@ However, the partition and sort key attribute names are fully configurable via `
 
 ---
 
+## 📈 Telemetry
+
+This library uses [System.Diagnostics.Metrics](https://learn.microsoft.com/en-us/dotnet/core/diagnostics/metrics) `Meter`s to collect metrics. These metrics can be opted in to be exported to your preferred telemetry system (e.g., OpenTelemetry, console output) using standard dotnet telemetry exporters.
+
+A full list of metric names can be found in the [MetricNames](src/DynamoDb.DistributedLock/Metrics/MetricNames.cs) class.
+
+By default no metrics are exported to your collector, but you can enable them by configuring the `Meter` in your application:
+
+[OpenTelemetry](https://opentelemetry.io/docs/languages/dotnet/)
+```csharp
+services.AddOpenTelemetry()
+    .WithMetrics(metrics => 
+        metrics
+            // There is only one meter used by this library
+            // and this constant value refers to its name
+            // this causes the telemetry system to collect metrics emitted during lock operations
+            .AddMeter(DynamoDb.DistributedLock.Metrics.MetricNames.MeterName)
+            // Configure your preferred exporter, e.g., OpenTelemetry Protocol (OTLP)
+            .AddOtlpExporter(options => options.Endpoint = otlpEndpoint)
+    );
+```
+
+Other options for collection of metrics are available, including local development options such as [dotnet-counters](https://learn.microsoft.com/en-us/dotnet/core/diagnostics/dotnet-counters) or the [.Net Aspire standalone dashboard](https://learn.microsoft.com/en-us/dotnet/aspire/fundamentals/dashboard/standalone)
+
+---
+
 ## 🧪 Unit Testing
 
 Unit tests are written with:
@@ -241,7 +267,6 @@ The library provides `DynamoDbDistributedLockAutoData` to support streamlined te
 
 - ⏱ Lock renewal support
 - 🔁 Auto-release logic for expired locks
-- 📈 Metrics and diagnostics support
 - 🎯 Health check integration
 
 ---

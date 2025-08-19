@@ -1,3 +1,4 @@
+using System.Diagnostics.Metrics;
 using AutoFixture;
 using DynamoDb.DistributedLock.Tests.TestKit.SpecimenBuilders;
 
@@ -49,6 +50,18 @@ public static class FixtureExtensions
     public static IFixture AddRetryPolicy(this IFixture fixture)
     {
         fixture.Customizations.Add(new RetryPolicySpecimenBuilder());
+        return fixture;
+    }
+    
+    /// <summary>
+    /// Adds customization that creates instances needed for metrics collection in tests.
+    /// </summary>
+    /// <param name="fixture">The AutoFixture instance to customize.</param>
+    /// <returns>The same <see cref="IFixture"/> instance for chaining.</returns>
+    public static IFixture AddMetrics(this IFixture fixture)
+    {
+        fixture.Customizations.Add(new MetricsSpecimenBuilder());
+        fixture.Freeze<IMeterFactory>();
         return fixture;
     }
 }

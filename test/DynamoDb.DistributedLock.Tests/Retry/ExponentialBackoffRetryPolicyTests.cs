@@ -1,10 +1,15 @@
 using System;
+using System.Diagnostics.Metrics;
 using System.Threading;
 using System.Threading.Tasks;
 using AutoFixture.Xunit3;
 using AwesomeAssertions;
+using DynamoDb.DistributedLock.Metrics;
 using DynamoDb.DistributedLock.Retry;
+using DynamoDb.DistributedLock.Tests.Metrics;
 using DynamoDb.DistributedLock.Tests.TestKit.Attributes;
+using DynamoDb.DistributedLock.Tests.TestKit.Extensions;
+using Microsoft.Extensions.Diagnostics.Metrics.Testing;
 
 namespace DynamoDb.DistributedLock.Tests.Retry;
 
@@ -86,11 +91,11 @@ public class ExponentialBackoffRetryPolicyTests
     [Theory]
     [DynamoDbDistributedLockAutoData]
     public async Task ExecuteAsync_WhenOperationFailsAndShouldRetry_ShouldRetryUpToMaxAttempts(
-        RetryOptions options)
+        RetryOptions options, [Frozen] IMeterFactory meterFactory, TestMetricAggregator<int> metricAggregator)
     {
         options.MaxAttempts = 3;
         options.BaseDelay = TimeSpan.FromMilliseconds(1); // Fast test
-        var sut = new ExponentialBackoffRetryPolicy(options);
+        var sut = new ExponentialBackoffRetryPolicy(options, meterFactory);
         var operationCalled = 0;
         var expectedException = new InvalidOperationException("Test exception");
 
@@ -105,17 +110,22 @@ public class ExponentialBackoffRetryPolicyTests
         var exception = await act.Should().ThrowAsync<InvalidOperationException>();
         exception.Which.Should().Be(expectedException);
         operationCalled.Should().Be(3);
+
+        metricAggregator.Collect(MetricNames.RetryAttempt).Should().HaveCount(2); // 2 retries after the first failure
+        metricAggregator.Collect(MetricNames.RetriesExhausted).Should().HaveCount(1);
     }
 
     [Theory]
     [DynamoDbDistributedLockAutoData]
     public async Task ExecuteAsync_WhenOperationSucceedsAfterRetries_ShouldReturnResult(
         RetryOptions options,
+        [Frozen] IMeterFactory meterFactory,
+        TestMetricAggregator<int> metricAggregator,
         string expectedResult)
     {
         options.MaxAttempts = 3;
         options.BaseDelay = TimeSpan.FromMilliseconds(1); // Fast test
-        var sut = new ExponentialBackoffRetryPolicy(options);
+        var sut = new ExponentialBackoffRetryPolicy(options, meterFactory);
         var operationCalled = 0;
 
         var result = await sut.ExecuteAsync(_ =>
@@ -128,6 +138,9 @@ public class ExponentialBackoffRetryPolicyTests
 
         result.Should().Be(expectedResult);
         operationCalled.Should().Be(3);
+        
+        metricAggregator.Collect(MetricNames.RetryAttempt).Should().HaveCount(2); // 3 retries after the first failure before success
+        metricAggregator.Collect(MetricNames.RetriesExhausted).Should().BeEmpty(); // Should not be exhausted
     }
 
     [Theory]

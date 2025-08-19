@@ -1,6 +1,8 @@
 using System;
+using System.Diagnostics.Metrics;
 using System.Threading;
 using System.Threading.Tasks;
+using DynamoDb.DistributedLock.Metrics;
 
 namespace DynamoDb.DistributedLock.Retry;
 
@@ -10,14 +12,19 @@ namespace DynamoDb.DistributedLock.Retry;
 public sealed class ExponentialBackoffRetryPolicy : IRetryPolicy
 {
     private readonly RetryOptions _options;
+    private readonly Meter _meter;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="ExponentialBackoffRetryPolicy"/> class.
     /// </summary>
     /// <param name="options">The retry configuration options.</param>
-    public ExponentialBackoffRetryPolicy(RetryOptions options)
+    /// <param name="meterFactory">Factory for meters used in telemetry collection</param>
+    public ExponentialBackoffRetryPolicy(RetryOptions options, IMeterFactory? meterFactory = null)
     {
         _options = options ?? throw new ArgumentNullException(nameof(options));
+        // use the IMeterFactory if it is available, otherwise create a new Meter instance.
+        // The DefaultMeterFactory will cache things and improve performance.
+        _meter = meterFactory?.Create(MetricNames.MeterName) ?? new Meter(MetricNames.MeterName);
     }
 
     /// <inheritdoc />
@@ -38,6 +45,11 @@ public sealed class ExponentialBackoffRetryPolicy : IRetryPolicy
 
             try
             {
+                // only increment as a retry attempt if this is not the first attempt
+                if (attempt != 0)
+                {
+                    _meter.RetryAttempt().Add(1);
+                }
                 return await operation(cancellationToken);
             }
             catch (Exception ex)
@@ -47,6 +59,7 @@ public sealed class ExponentialBackoffRetryPolicy : IRetryPolicy
 
                 if (attempt >= _options.MaxAttempts || !shouldRetry(ex))
                 {
+                    _meter.RetriesExausted().Add(1);
                     throw;
                 }
 
