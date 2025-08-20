@@ -59,7 +59,7 @@ public sealed class ExponentialBackoffRetryPolicy : IRetryPolicy
 
                 if (attempt >= _options.MaxAttempts || !shouldRetry(ex))
                 {
-                    _meter.RetriesExausted().Add(1);
+                    _meter.RetriesExhausted().Add(1);
                     throw;
                 }
 

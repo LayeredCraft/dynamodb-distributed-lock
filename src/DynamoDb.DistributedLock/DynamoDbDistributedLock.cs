@@ -33,7 +33,7 @@ public class DynamoDbDistributedLock : IDynamoDbDistributedLock
     {
         _client = client ?? throw new ArgumentNullException(nameof(client));
         _options = options.Value ?? throw new ArgumentNullException(nameof(options));
-        _retryPolicy = new Lazy<IRetryPolicy>(() => new ExponentialBackoffRetryPolicy(_options.Retry));
+        _retryPolicy = new Lazy<IRetryPolicy>(() => new ExponentialBackoffRetryPolicy(_options.Retry, meterFactory));
         // use the IMeterFactory if it is available, otherwise create a new Meter instance.
         // The DefaultMeterFactory will cache things and improve performance.
         _meter = meterFactory?.Create(MetricNames.MeterName) ?? new Meter(MetricNames.MeterName);

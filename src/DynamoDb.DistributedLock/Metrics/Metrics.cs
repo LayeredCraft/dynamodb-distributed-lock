@@ -20,7 +20,7 @@ internal static partial class Metrics
     public static partial LockAcquireFailed LockAcquireFailed(this Meter meter);
     
     [Counter<int>(Name = MetricNames.RetriesExhausted)]
-    public static partial RetriesExhausted RetriesExausted(this Meter meter);
+    public static partial RetriesExhausted RetriesExhausted(this Meter meter);
     
     [Counter<int>(Name = MetricNames.RetryAttempt)]
     public static partial RetryAttempt RetryAttempt(this Meter meter);

@@ -139,7 +139,7 @@ public class ExponentialBackoffRetryPolicyTests
         result.Should().Be(expectedResult);
         operationCalled.Should().Be(3);
         
-        metricAggregator.Collect(MetricNames.RetryAttempt).Should().HaveCount(2); // 3 retries after the first failure before success
+        metricAggregator.Collect(MetricNames.RetryAttempt).Should().HaveCount(2); // 2 retries after the first failure before success
         metricAggregator.Collect(MetricNames.RetriesExhausted).Should().BeEmpty(); // Should not be exhausted
     }
 
