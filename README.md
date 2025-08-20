@@ -242,6 +242,9 @@ services.AddOpenTelemetry()
             // and this constant value refers to its name
             // this causes the telemetry system to collect metrics emitted during lock operations
             .AddMeter(DynamoDb.DistributedLock.Metrics.MetricNames.MeterName)
+            // Views can be used to filter out any metrics you do not want to collect 
+            // while still collecting all metrics from the Meter
+            .AddView(DynamoDb.DistributedLock.Metrics.MetricNames.LockReleaseTimer, MetricStreamConfiguration.Drop)
             // Configure your preferred exporter, e.g., OpenTelemetry Protocol (OTLP)
             .AddOtlpExporter(options => options.Endpoint = otlpEndpoint)
     );
