@@ -19,24 +19,22 @@ public class DynamoDbDistributedLock : IDynamoDbDistributedLock
     private readonly IAmazonDynamoDB _client;
     private readonly DynamoDbLockOptions _options;
     private readonly Lazy<IRetryPolicy> _retryPolicy;
-    private readonly Meter _meter;
+    private readonly ILockMetrics _lockMetrics;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="DynamoDbDistributedLock"/> class.
     /// </summary>
     /// <param name="client">The DynamoDB client.</param>
     /// <param name="options">Configuration options for the lock.</param>
-    /// <param name="meterFactory">Creates Meters for use in telemetry</param>
+    /// <param name="lockMetrics">Collects telemetry based on lock operations</param>
     public DynamoDbDistributedLock(IAmazonDynamoDB client,
         IOptions<DynamoDbLockOptions> options,
-        IMeterFactory? meterFactory = null)
+        ILockMetrics lockMetrics)
     {
         _client = client ?? throw new ArgumentNullException(nameof(client));
         _options = options.Value ?? throw new ArgumentNullException(nameof(options));
-        _retryPolicy = new Lazy<IRetryPolicy>(() => new ExponentialBackoffRetryPolicy(_options.Retry, meterFactory));
-        // use the IMeterFactory if it is available, otherwise create a new Meter instance.
-        // The DefaultMeterFactory will cache things and improve performance.
-        _meter = meterFactory?.Create(MetricNames.MeterName) ?? new Meter(MetricNames.MeterName);
+        _lockMetrics = lockMetrics ?? throw new ArgumentNullException(nameof(lockMetrics));
+        _retryPolicy = new Lazy<IRetryPolicy>(() => new ExponentialBackoffRetryPolicy(_options.Retry, lockMetrics));
     }
 
     /// <summary>
@@ -48,7 +46,7 @@ public class DynamoDbDistributedLock : IDynamoDbDistributedLock
     /// <returns><c>true</c> if the lock was acquired; otherwise, <c>false</c>.</returns>
     public async Task<bool> AcquireLockAsync(string resourceId, string ownerId, CancellationToken cancellationToken = default)
     {
-        using var _ = _meter.LockAcquireTimer().Start();
+        using var _ = _lockMetrics.TrackLockAcquire();
         var result = await TryAcquireLockInternalAsync(resourceId, ownerId, cancellationToken);
         return result.IsSuccess;
     }
@@ -62,7 +60,7 @@ public class DynamoDbDistributedLock : IDynamoDbDistributedLock
     /// <returns><c>true</c> if the lock was released; <c>false</c> if the lock was not owned by the caller.</returns>
     public async Task<bool> ReleaseLockAsync(string resourceId, string ownerId, CancellationToken cancellationToken = default)
     {
-        using var _ = _meter.LockReleaseTimer().Start();
+        using var _ = _lockMetrics.TrackLockRelease();
         var request = new DeleteItemRequest
         {
             TableName = _options.TableName,
@@ -81,17 +79,17 @@ public class DynamoDbDistributedLock : IDynamoDbDistributedLock
         try
         {
             await _client.DeleteItemAsync(request, cancellationToken);
-            _meter.LockReleased().Add(1);
+            _lockMetrics.LockReleased();
             return true; // Lock released
         }
         catch (ConditionalCheckFailedException)
         {
-            _meter.LockReleaseFailed().Add(1, "not_owned");
+            _lockMetrics.LockReleaseFailed("not_owned");
             return false; // Lock was held by another process
         }
         catch
         {
-            _meter.LockReleaseFailed().Add(1, "unexpected_exception");
+            _lockMetrics.LockReleaseFailed("unexpected_exception");
             throw;
         }
     }
@@ -105,7 +103,7 @@ public class DynamoDbDistributedLock : IDynamoDbDistributedLock
     /// <returns>An <see cref="IDistributedLockHandle"/> if the lock was successfully acquired; otherwise, <c>null</c>.</returns>
     public async Task<IDistributedLockHandle?> AcquireLockHandleAsync(string resourceId, string ownerId, CancellationToken cancellationToken = default)
     {
-        using var _ = _meter.LockAcquireTimer().Start();
+        using var _ = _lockMetrics.TrackLockAcquire();
         var result = await TryAcquireLockInternalAsync(resourceId, ownerId, cancellationToken);
         return result.IsSuccess ? new DistributedLockHandle(this, resourceId, ownerId, result.ExpiresAt) : null;
     }
@@ -138,17 +136,17 @@ public class DynamoDbDistributedLock : IDynamoDbDistributedLock
         try
         {
             await _client.PutItemAsync(request, cancellationToken);
-            _meter.LockAcquired().Add(1);
+            _lockMetrics.LockAcquired();
             return new LockAcquisitionResult(true, expiresAt);
         }
         catch (ConditionalCheckFailedException) when (suppressExceptions)
         {
-            _meter.LockAcquireFailed().Add(1, "condition_check_failed");
+            _lockMetrics.LockAcquireFailed("condition_check_failed");
             return new LockAcquisitionResult(false, default);
         }
         catch
         {
-            _meter.LockAcquireFailed().Add(1, "exception_taking_lock");
+            _lockMetrics.LockAcquireFailed("exception_taking_lock");
             throw;
         }
     }

@@ -15,13 +15,24 @@ namespace DynamoDb.DistributedLock.Tests.Retry;
 
 public class ExponentialBackoffRetryPolicyTests
 {
-    [Fact]
-    public void Constructor_WhenOptionsIsNull_ShouldThrowArgumentNullException()
+    [Theory]
+    [DynamoDbDistributedLockAutoData]
+    public void Constructor_WhenOptionsIsNull_ShouldThrowArgumentNullException(ILockMetrics lockMetrics)
     {
-        var act = () => new ExponentialBackoffRetryPolicy(null!);
+        var act = () => new ExponentialBackoffRetryPolicy(null!, lockMetrics);
 
         act.Should().Throw<ArgumentNullException>()
             .Which.ParamName.Should().Be("options");
+    }
+    
+    [Theory]
+    [DynamoDbDistributedLockAutoData]
+    public void Constructor_WhenLockMetricsIsNull_ShouldThrowArgumentNullException(RetryOptions retryOptions)
+    {
+        var act = () => new ExponentialBackoffRetryPolicy(retryOptions, null!);
+
+        act.Should().Throw<ArgumentNullException>()
+            .Which.ParamName.Should().Be("lockMetrics");
     }
 
     [Theory]
@@ -50,9 +61,10 @@ public class ExponentialBackoffRetryPolicyTests
     [DynamoDbDistributedLockAutoData]
     public async Task ExecuteAsync_WhenOperationSucceedsOnFirstAttempt_ShouldReturnResult(
         RetryOptions options,
+        ILockMetrics lockMetrics,
         string expectedResult)
     {
-        var sut = new ExponentialBackoffRetryPolicy(options);
+        var sut = new ExponentialBackoffRetryPolicy(options, lockMetrics);
         var operationCalled = 0;
 
         var result = await sut.ExecuteAsync(_ =>
@@ -68,10 +80,11 @@ public class ExponentialBackoffRetryPolicyTests
     [Theory]
     [DynamoDbDistributedLockAutoData]
     public async Task ExecuteAsync_WhenOperationFailsButShouldNotRetry_ShouldThrowImmediately(
-        RetryOptions options)
+        RetryOptions options,
+        ILockMetrics lockMetrics)
     {
         options.MaxAttempts = 3;
-        var sut = new ExponentialBackoffRetryPolicy(options);
+        var sut = new ExponentialBackoffRetryPolicy(options, lockMetrics);
         var operationCalled = 0;
         var expectedException = new InvalidOperationException("Test exception");
 
@@ -91,11 +104,11 @@ public class ExponentialBackoffRetryPolicyTests
     [Theory]
     [DynamoDbDistributedLockAutoData]
     public async Task ExecuteAsync_WhenOperationFailsAndShouldRetry_ShouldRetryUpToMaxAttempts(
-        RetryOptions options, [Frozen] IMeterFactory meterFactory, TestMetricAggregator<int> metricAggregator)
+        RetryOptions options, ILockMetrics lockMetrics, TestMetricAggregator<int> metricAggregator)
     {
         options.MaxAttempts = 3;
         options.BaseDelay = TimeSpan.FromMilliseconds(1); // Fast test
-        var sut = new ExponentialBackoffRetryPolicy(options, meterFactory);
+        var sut = new ExponentialBackoffRetryPolicy(options, lockMetrics);
         var operationCalled = 0;
         var expectedException = new InvalidOperationException("Test exception");
 
@@ -119,13 +132,13 @@ public class ExponentialBackoffRetryPolicyTests
     [DynamoDbDistributedLockAutoData]
     public async Task ExecuteAsync_WhenOperationSucceedsAfterRetries_ShouldReturnResult(
         RetryOptions options,
-        [Frozen] IMeterFactory meterFactory,
+        ILockMetrics lockMetrics,
         TestMetricAggregator<int> metricAggregator,
         string expectedResult)
     {
         options.MaxAttempts = 3;
         options.BaseDelay = TimeSpan.FromMilliseconds(1); // Fast test
-        var sut = new ExponentialBackoffRetryPolicy(options, meterFactory);
+        var sut = new ExponentialBackoffRetryPolicy(options, lockMetrics);
         var operationCalled = 0;
 
         var result = await sut.ExecuteAsync(_ =>
@@ -146,11 +159,12 @@ public class ExponentialBackoffRetryPolicyTests
     [Theory]
     [DynamoDbDistributedLockAutoData]
     public async Task ExecuteAsync_WhenCancellationRequested_ShouldThrowOperationCanceledException(
-        RetryOptions options)
+        RetryOptions options,
+        ILockMetrics lockMetrics)
     {
         options.MaxAttempts = 3;
         options.BaseDelay = TimeSpan.FromMilliseconds(100);
-        var sut = new ExponentialBackoffRetryPolicy(options);
+        var sut = new ExponentialBackoffRetryPolicy(options, lockMetrics);
         using var cts = new CancellationTokenSource(TimeSpan.FromMilliseconds(50));
 
         var act = async () => await sut.ExecuteAsync<int>(

@@ -16,9 +16,10 @@ public class DynamoDbDistributedLockTests
 {
     [Theory]
     [DynamoDbDistributedLockAutoData]
-    public void Constructor_WhenClientIsNull_ShouldThrowArgumentNullException(IOptions<DynamoDbLockOptions> options)
+    public void Constructor_WhenClientIsNull_ShouldThrowArgumentNullException(IOptions<DynamoDbLockOptions> options, 
+        ILockMetrics lockMetrics)
     {
-        Action act = () => _ = new DynamoDbDistributedLock(null!, options);
+        Action act = () => _ = new DynamoDbDistributedLock(null!, options, lockMetrics);
 
         act.Should().Throw<ArgumentNullException>()
             .Which.ParamName.Should().Be("client");
@@ -28,12 +29,25 @@ public class DynamoDbDistributedLockTests
     [DynamoDbDistributedLockAutoData]
     public void Constructor_WhenOptionsValueIsNull_ShouldThrowArgumentNullException(
         IAmazonDynamoDB client,
-        IOptions<DynamoDbLockOptions> nullOptions)
+        IOptions<DynamoDbLockOptions> nullOptions,
+        ILockMetrics lockMetrics)
     {
-        var act = () => _ = new DynamoDbDistributedLock(client, nullOptions);
+        var act = () => _ = new DynamoDbDistributedLock(client, nullOptions, lockMetrics);
 
         act.Should().Throw<ArgumentNullException>()
             .Which.ParamName.Should().Be("options");
+    }
+    
+    [Theory]
+    [DynamoDbDistributedLockAutoData]
+    public void Constructor_WhenLockMetricsValueIsNull_ShouldThrowArgumentNullException(
+        IAmazonDynamoDB client,
+        IOptions<DynamoDbLockOptions> options)
+    {
+        var act = () => _ = new DynamoDbDistributedLock(client, options, null!);
+
+        act.Should().Throw<ArgumentNullException>()
+            .Which.ParamName.Should().Be("lockMetrics");
     }
 
     [Theory]

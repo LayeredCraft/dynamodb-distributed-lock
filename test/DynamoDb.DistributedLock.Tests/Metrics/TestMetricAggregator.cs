@@ -8,14 +8,14 @@ public class TestMetricAggregator<T> where T : struct
 {
     private readonly Dictionary<string, MetricCollector<T>> _collectors = new();
 
-    public TestMetricAggregator(IMeterFactory meterFactory)
+    public TestMetricAggregator(Meter meter)
     {
         var names = GetAllMetricNames();
         foreach (var name in names)
         {
             if (name != null)
             {
-                var collector = new MetricCollector<T>(meterFactory, MetricNames.MeterName, name);
+                var collector = new MetricCollector<T>(meter, name);
                 _collectors.Add(name, collector);
             }
         }

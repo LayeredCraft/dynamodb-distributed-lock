@@ -1,6 +1,8 @@
 using System;
+using System.Diagnostics.Metrics;
 using Amazon.DynamoDBv2;
 using Amazon.Extensions.NETCore.Setup;
+using DynamoDb.DistributedLock.Metrics;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -42,6 +44,7 @@ public static class ServiceCollectionExtensions
         services.Configure(configure);
         services.AddAWSService<IAmazonDynamoDB>(awsOptions);
         services.AddSingleton<IDynamoDbDistributedLock, DynamoDbDistributedLock>();
+        services.AddSingleton<ILockMetrics, LockMetrics>(_ => LockMetrics.Default);
         return services;
     }
 }

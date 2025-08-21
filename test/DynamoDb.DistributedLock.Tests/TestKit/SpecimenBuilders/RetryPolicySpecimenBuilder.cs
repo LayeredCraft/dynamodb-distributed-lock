@@ -1,6 +1,7 @@
 using System.Diagnostics.Metrics;
 using AutoFixture;
 using AutoFixture.Kernel;
+using DynamoDb.DistributedLock.Metrics;
 using DynamoDb.DistributedLock.Retry;
 
 namespace DynamoDb.DistributedLock.Tests.TestKit.SpecimenBuilders;
@@ -26,8 +27,8 @@ public class RetryPolicySpecimenBuilder : ISpecimenBuilder
                 UseJitter = false,
                 Enabled = false
             };
-            var meterFactory = context.Create<IMeterFactory>();
-            return new ExponentialBackoffRetryPolicy(options, meterFactory);
+            var lockMetrics = context.Create<ILockMetrics>();
+            return new ExponentialBackoffRetryPolicy(options, lockMetrics);
         }
 
         if (type == typeof(RetryOptions))

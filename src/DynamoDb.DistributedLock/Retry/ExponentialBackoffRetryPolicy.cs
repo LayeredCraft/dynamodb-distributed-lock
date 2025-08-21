@@ -12,19 +12,17 @@ namespace DynamoDb.DistributedLock.Retry;
 public sealed class ExponentialBackoffRetryPolicy : IRetryPolicy
 {
     private readonly RetryOptions _options;
-    private readonly Meter _meter;
+    private readonly ILockMetrics _lockMetrics;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="ExponentialBackoffRetryPolicy"/> class.
     /// </summary>
     /// <param name="options">The retry configuration options.</param>
-    /// <param name="meterFactory">Factory for meters used in telemetry collection</param>
-    public ExponentialBackoffRetryPolicy(RetryOptions options, IMeterFactory? meterFactory = null)
+    /// <param name="lockMetrics">Collects telemetry based on lock operations</param>
+    public ExponentialBackoffRetryPolicy(RetryOptions options, ILockMetrics lockMetrics)
     {
         _options = options ?? throw new ArgumentNullException(nameof(options));
-        // use the IMeterFactory if it is available, otherwise create a new Meter instance.
-        // The DefaultMeterFactory will cache things and improve performance.
-        _meter = meterFactory?.Create(MetricNames.MeterName) ?? new Meter(MetricNames.MeterName);
+        _lockMetrics = lockMetrics ?? throw new ArgumentNullException(nameof(lockMetrics));
     }
 
     /// <inheritdoc />
@@ -48,7 +46,7 @@ public sealed class ExponentialBackoffRetryPolicy : IRetryPolicy
                 // only increment as a retry attempt if this is not the first attempt
                 if (attempt != 0)
                 {
-                    _meter.RetryAttempt().Add(1);
+                    _lockMetrics.RetryAttempt();
                 }
                 return await operation(cancellationToken);
             }
@@ -59,7 +57,7 @@ public sealed class ExponentialBackoffRetryPolicy : IRetryPolicy
 
                 if (attempt >= _options.MaxAttempts || !shouldRetry(ex))
                 {
-                    _meter.RetriesExhausted().Add(1);
+                    _lockMetrics.RetriesExhausted();
                     throw;
                 }
 

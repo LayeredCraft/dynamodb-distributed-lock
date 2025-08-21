@@ -1,6 +1,7 @@
 using System.Diagnostics.Metrics;
 using AutoFixture;
 using AutoFixture.Kernel;
+using DynamoDb.DistributedLock.Metrics;
 using DynamoDb.DistributedLock.Tests.Metrics;
 using DynamoDb.DistributedLock.Tests.TestKit.Extensions;
 using Microsoft.Extensions.DependencyInjection;
@@ -14,27 +15,27 @@ public class MetricsSpecimenBuilder : ISpecimenBuilder
         if (request is not Type type)
             return new NoSpecimen();
 
-        if (type == typeof(IMeterFactory))
+        if (type == typeof(Meter))
         {
-            // the DefaultMeterFactory is an internal type
-            // we could implement a mock here but just doing this now to get it working
-            var services = new ServiceCollection();
-            services.AddMetrics();
-            var serviceProvider = services.BuildServiceProvider();
-            var meterFactory = serviceProvider.GetRequiredService<IMeterFactory>();
-            return meterFactory;
+            return new Meter(MetricNames.MeterName);
         }
 
         if (type == typeof(TestMetricAggregator<double>))
         {
-            var meterFactory = context.Create<IMeterFactory>();
+            var meterFactory = context.Create<Meter>();
             return new TestMetricAggregator<double>(meterFactory);
         }
         
         if (type == typeof(TestMetricAggregator<int>))
         {
-            var meterFactory = context.Create<IMeterFactory>();
+            var meterFactory = context.Create<Meter>();
             return new TestMetricAggregator<int>(meterFactory);
+        }
+
+        if (type == typeof(ILockMetrics))
+        {
+            var meter = context.Create<Meter>();
+            return new LockMetrics(meter);
         }
         
         return new NoSpecimen();

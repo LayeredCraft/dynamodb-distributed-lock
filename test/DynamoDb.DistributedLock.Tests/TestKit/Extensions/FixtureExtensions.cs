@@ -61,7 +61,7 @@ public static class FixtureExtensions
     public static IFixture AddMetrics(this IFixture fixture)
     {
         fixture.Customizations.Add(new MetricsSpecimenBuilder());
-        fixture.Freeze<IMeterFactory>();
+        fixture.Freeze<Meter>();
         return fixture;
     }
 }
