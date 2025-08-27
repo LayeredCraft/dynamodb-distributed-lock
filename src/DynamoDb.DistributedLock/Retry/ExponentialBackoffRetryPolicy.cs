@@ -16,6 +16,15 @@ public sealed class ExponentialBackoffRetryPolicy : IRetryPolicy
 
     /// <summary>
     /// Initializes a new instance of the <see cref="ExponentialBackoffRetryPolicy"/> class.
+    /// Uses the default <see cref="ILockMetrics"/> instance
+    /// </summary>
+    /// <param name="options">The retry configuration options.</param>
+    public ExponentialBackoffRetryPolicy(RetryOptions options) : this(options, LockMetrics.Default)
+    {
+    }
+    
+    /// <summary>
+    /// Initializes a new instance of the <see cref="ExponentialBackoffRetryPolicy"/> class.
     /// </summary>
     /// <param name="options">The retry configuration options.</param>
     /// <param name="lockMetrics">Collects telemetry based on lock operations</param>

@@ -1,5 +1,6 @@
 using System.Diagnostics.Metrics;
 using AutoFixture;
+using AutoFixture.Kernel;
 using DynamoDb.DistributedLock.Tests.TestKit.SpecimenBuilders;
 
 namespace DynamoDb.DistributedLock.Tests.TestKit.Extensions;
@@ -62,6 +63,19 @@ public static class FixtureExtensions
     {
         fixture.Customizations.Add(new MetricsSpecimenBuilder());
         fixture.Freeze<Meter>();
+        return fixture;
+    }
+
+    /// <summary>
+    /// Adds customizations for DynamoDbDistributedLock creation
+    /// </summary>
+    /// <param name="fixture"></param>
+    /// <returns>The same <see cref="IFixture"/> instance for chaining.</returns>
+    public static IFixture AddDynamoDbDistributedLock(this IFixture fixture)
+    {
+        // we need constructor selection to be greedy to pick up the optional parameters
+        fixture.Customize<DynamoDbDistributedLock>(x => 
+            x.FromFactory(new MethodInvoker(new GreedyConstructorQuery())));
         return fixture;
     }
 }

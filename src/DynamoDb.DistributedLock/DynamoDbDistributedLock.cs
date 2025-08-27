@@ -23,6 +23,17 @@ public class DynamoDbDistributedLock : IDynamoDbDistributedLock
 
     /// <summary>
     /// Initializes a new instance of the <see cref="DynamoDbDistributedLock"/> class.
+    /// Uses the default <see cref="ILockMetrics"/> instance
+    /// </summary>
+    /// <param name="client">The DynamoDB client.</param>
+    /// <param name="options">Configuration options for the lock.</param>
+    public DynamoDbDistributedLock(IAmazonDynamoDB client,
+        IOptions<DynamoDbLockOptions> options) : this(client, options, LockMetrics.Default)
+    {
+    }
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="DynamoDbDistributedLock"/> class.
     /// </summary>
     /// <param name="client">The DynamoDB client.</param>
     /// <param name="options">Configuration options for the lock.</param>

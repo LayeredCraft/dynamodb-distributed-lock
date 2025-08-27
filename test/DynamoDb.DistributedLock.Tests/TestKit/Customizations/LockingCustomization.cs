@@ -25,6 +25,9 @@ public class LockingCustomization : ICustomization
         // 🔗 Add DistributedLockHandle customization
         fixture.AddDistributedLockHandle();
         
+        // Add DynamoDbDistributedLock
+        fixture.AddDynamoDbDistributedLock();
+        
         // 🔄 Add retry policy customization
         fixture.AddRetryPolicy();
         
