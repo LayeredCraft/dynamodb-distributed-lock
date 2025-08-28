@@ -13,6 +13,8 @@ This is a .NET library that provides distributed locking using Amazon DynamoDB. 
 - **DynamoDbLockOptions** (src/DynamoDb.DistributedLock/DynamoDbLockOptions.cs): Configuration options with retry settings
 - **Retry System** (src/DynamoDb.DistributedLock/Retry/): Exponential backoff retry policy with jitter
 - **Dependency Injection** (src/DynamoDb.DistributedLock/Extensions/ServiceCollectionExtensions.cs): Configuration binding and service registration
+- **Metrics** (src/DynamoDb.DistributedLock/Metrics/): System.Diagnostics.Metrics integration for observability
+- **Observability Package** (src/DynamoDb.DistributedLock.Observability/): OpenTelemetry integration extensions
 
 ## Development Commands
 
@@ -55,8 +57,11 @@ dotnet pack --configuration Release
 
 - The library uses **Directory.Build.props** for shared MSBuild properties
 - Test projects are automatically excluded from packing via `IsTestProject=true`
-- Both main library and tests target .NET 8.0 and 9.0
+- Both main library and observability package target .NET 8.0 and 9.0
 - Tests use `UseMicrosoftTestingPlatformRunner=true` for modern test execution
+- The solution contains two projects:
+  - **DynamoDb.DistributedLock**: Core distributed lock library
+  - **DynamoDb.DistributedLock.Observability**: OpenTelemetry integration extensions
 
 ## Code Patterns
 

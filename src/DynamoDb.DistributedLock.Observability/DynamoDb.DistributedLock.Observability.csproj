@@ -5,10 +5,10 @@
         <TargetFrameworks>net8.0;net9.0</TargetFrameworks>
         <LangVersion>default</LangVersion>
 
-        <PackageId>DynamoDb.DistributedLock</PackageId>
-        <Title>DynamoDb.DistributedLock</Title>
-        <Description>Distributed lock coordination using Amazon DynamoDB with configurable key structure.</Description>
-        <PackageTags>dynamodb;distributed-lock;locking;aws;serverless</PackageTags>
+        <PackageId>DynamoDb.DistributedLock.Observability</PackageId>
+        <Title>DynamoDb.DistributedLock.Observability</Title>
+        <Description>OpenTelemetry integration for DynamoDb.DistributedLock metrics collection.</Description>
+        <PackageTags>dynamodb;distributed-lock;observability;opentelemetry;metrics;aws;serverless</PackageTags>
         <PackageIcon>icon.png</PackageIcon>
         <PackageReadmeFile>README.md</PackageReadmeFile>
         <Copyright>Copyright © 2025 Nick Cipollina</Copyright>
@@ -19,11 +19,11 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="AWSSDK.DynamoDBv2" Version="4.0.5.1" />
-        <PackageReference Include="AWSSDK.Extensions.NETCore.Setup" Version="4.0.2.2" />
-        <PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="9.0.8" />
-        <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="9.0.8" />
-        <PackageReference Include="Microsoft.Extensions.Options" Version="9.0.8" />
+        <PackageReference Include="OpenTelemetry" Version="1.12.0" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\DynamoDb.DistributedLock\DynamoDb.DistributedLock.csproj" />
     </ItemGroup>
 
     <ItemGroup>
@@ -33,7 +33,7 @@
 
     <ItemGroup>
         <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
-            <_Parameter1>DynamoDb.DistributedLock.Tests</_Parameter1>
+            <_Parameter1>DynamoDb.DistributedLock.Observability.Tests</_Parameter1>
         </AssemblyAttribute>
     </ItemGroup>
 

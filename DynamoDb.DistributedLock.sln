@@ -28,6 +28,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DynamoDb.DistributedLock.Tests", "test\DynamoDb.DistributedLock.Tests\DynamoDb.DistributedLock.Tests.csproj", "{1D5ED003-9182-475F-8FAB-3701D2BC900C}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DynamoDb.DistributedLock.Observability", "src\DynamoDb.DistributedLock.Observability\DynamoDb.DistributedLock.Observability.csproj", "{B2E3F4A6-8C9D-4E7B-A1F5-2D3C6789ABCD}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -39,6 +41,7 @@ Global
 	GlobalSection(NestedProjects) = preSolution
 		{AA9CF908-DFDA-4959-9B32-83FA714B8A79} = {33AD2D83-0DD4-4EE5-876F-25FF078D881E}
 		{1D5ED003-9182-475F-8FAB-3701D2BC900C} = {3DE24C5E-21FE-4689-AD86-2301A2DF465F}
+		{B2E3F4A6-8C9D-4E7B-A1F5-2D3C6789ABCD} = {33AD2D83-0DD4-4EE5-876F-25FF078D881E}
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{AA9CF908-DFDA-4959-9B32-83FA714B8A79}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
@@ -49,5 +52,9 @@ Global
 		{1D5ED003-9182-475F-8FAB-3701D2BC900C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{1D5ED003-9182-475F-8FAB-3701D2BC900C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{1D5ED003-9182-475F-8FAB-3701D2BC900C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B2E3F4A6-8C9D-4E7B-A1F5-2D3C6789ABCD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B2E3F4A6-8C9D-4E7B-A1F5-2D3C6789ABCD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B2E3F4A6-8C9D-4E7B-A1F5-2D3C6789ABCD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B2E3F4A6-8C9D-4E7B-A1F5-2D3C6789ABCD}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

@@ -1,6 +1,6 @@
 <Project>
     <PropertyGroup>
-        <VersionPrefix>1.2.0</VersionPrefix>
+        <VersionPrefix>1.2.1</VersionPrefix>
         <PackageLicenseExpression>MIT</PackageLicenseExpression>
 
         <!-- Other useful metadata -->
@@ -8,10 +8,24 @@
         <RepositoryType>git</RepositoryType>
         <Authors>Nick Cipollina</Authors>
         <PackageProjectUrl>https://github.com/LayeredCraft/dynamodb-distributed-lock</PackageProjectUrl>
+        <!-- NuGet.org specific -->
+        <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
+        <IsPackable>true</IsPackable>
+        <IncludeSymbols>true</IncludeSymbols>
+        <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+        <PublishRepositoryUrl>true</PublishRepositoryUrl>
+        <EmbedUntrackedSources>true</EmbedUntrackedSources>
     </PropertyGroup>
     <!-- Globally disable packing for any test project that sets IsTestProject=true -->
     <PropertyGroup Condition="'$(IsTestProject)' == 'true'">
         <IsPackable>false</IsPackable>
     </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.0">
+            <PrivateAssets>all</PrivateAssets>
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
+    </ItemGroup>
 
 </Project>
