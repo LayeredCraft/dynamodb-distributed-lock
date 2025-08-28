@@ -9,6 +9,7 @@
         <LangVersion>default</LangVersion>
         <TestingPlatformDotnetTestSupport>true</TestingPlatformDotnetTestSupport>
         <UseMicrosoftTestingPlatformRunner>true</UseMicrosoftTestingPlatformRunner>
+        <IsPackable>false</IsPackable>
     </PropertyGroup>
     <PropertyGroup>
         <IsTestProject>true</IsTestProject>
