@@ -27,7 +27,7 @@ public class TestMetricAggregator<T> where T : struct
         {
             return collector.GetMeasurementSnapshot();
         }
-        throw new Exception($"Metric '{metricName}' was not collected");
+        throw new ArgumentException($"Metric '{metricName}' was not collected", nameof(metricName));
     }
 
     private static IEnumerable<string?> GetAllMetricNames()
