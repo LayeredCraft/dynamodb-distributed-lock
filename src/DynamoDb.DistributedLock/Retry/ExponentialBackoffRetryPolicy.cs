@@ -64,9 +64,13 @@ public sealed class ExponentialBackoffRetryPolicy : IRetryPolicy
                 lastException = ex;
                 attempt++;
 
-                if (attempt >= _options.MaxAttempts || !shouldRetry(ex))
+                if (attempt >= _options.MaxAttempts)
                 {
                     _lockMetrics.RetriesExhausted();
+                    throw;
+                }
+                if (!shouldRetry(ex))
+                {
                     throw;
                 }
 
