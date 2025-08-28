@@ -15,11 +15,12 @@
 
 ---
 
-## 📦 Package
+## 📦 Packages
 
 | Package                     | Build | NuGet                                                                                                                                                                                      | Downloads                                                                                 |
 |----------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------|
 | **DynamoDb.DistributedLock** | [![Build](https://github.com/LayeredCraft/dynamodb-distributed-lock/actions/workflows/build.yaml/badge.svg)](https://github.com/LayeredCraft/dynamodb-distributed-lock/actions/workflows/build.yaml) | [![NuGet](https://img.shields.io/nuget/v/DynamoDb.DistributedLock.svg)](https://www.nuget.org/packages/DynamoDb.DistributedLock)                                                           | [![NuGet Downloads](https://img.shields.io/nuget/dt/DynamoDb.DistributedLock.svg)](https://www.nuget.org/packages/DynamoDb.DistributedLock) |
+| **DynamoDb.DistributedLock.Observability** | [![Build](https://github.com/LayeredCraft/dynamodb-distributed-lock/actions/workflows/build.yaml/badge.svg)](https://github.com/LayeredCraft/dynamodb-distributed-lock/actions/workflows/build.yaml) | [![NuGet](https://img.shields.io/nuget/v/DynamoDb.DistributedLock.Observability.svg)](https://www.nuget.org/packages/DynamoDb.DistributedLock.Observability)                               | [![NuGet Downloads](https://img.shields.io/nuget/dt/DynamoDb.DistributedLock.Observability.svg)](https://www.nuget.org/packages/DynamoDb.DistributedLock.Observability) |
 
 ---
 
@@ -225,32 +226,66 @@ However, the partition and sort key attribute names are fully configurable via `
 
 ---
 
-## 📈 Telemetry
+## 📈 Observability
 
-This library uses [System.Diagnostics.Metrics](https://learn.microsoft.com/en-us/dotnet/core/diagnostics/metrics) `Meter`s to collect metrics. These metrics can be opted in to be exported to your preferred telemetry system (e.g., OpenTelemetry, console output) using standard dotnet telemetry exporters.
+This library uses [System.Diagnostics.Metrics](https://learn.microsoft.com/en-us/dotnet/core/diagnostics/metrics) to collect telemetry data. These metrics can be exported to your preferred observability system (e.g., OpenTelemetry, Prometheus, console output) using standard .NET telemetry exporters.
 
 A full list of metric names can be found in the [MetricNames](src/DynamoDb.DistributedLock/Metrics/MetricNames.cs) class.
 
-By default no metrics are exported to your collector, but you can enable them by configuring the `Meter` in your application:
+### 📦 Observability Package (Recommended)
 
-[OpenTelemetry](https://opentelemetry.io/docs/languages/dotnet/)
+For simplified OpenTelemetry integration, install the observability package:
+
+```bash
+dotnet add package DynamoDb.DistributedLock.Observability
+```
+
+Then configure metrics collection with a single method call:
+
 ```csharp
+using DynamoDb.DistributedLock.Observability;
+
 services.AddOpenTelemetry()
     .WithMetrics(metrics => 
         metrics
-            // There is only one meter used by this library
-            // and this constant value refers to its name
-            // this causes the telemetry system to collect metrics emitted during lock operations
-            .AddMeter(DynamoDb.DistributedLock.Metrics.MetricNames.MeterName)
-            // Views can be used to filter out any metrics you do not want to collect 
-            // while still collecting all metrics from the Meter
-            .AddView(DynamoDb.DistributedLock.Metrics.MetricNames.LockReleaseTimer, MetricStreamConfiguration.Drop)
+            // Automatically registers the DynamoDB distributed lock meter
+            .AddDynamoDbDistributedLock()
             // Configure your preferred exporter, e.g., OpenTelemetry Protocol (OTLP)
             .AddOtlpExporter(options => options.Endpoint = otlpEndpoint)
     );
 ```
 
-Other options for collection of metrics are available, including local development options such as [dotnet-counters](https://learn.microsoft.com/en-us/dotnet/core/diagnostics/dotnet-counters) or the [.Net Aspire standalone dashboard](https://learn.microsoft.com/en-us/dotnet/aspire/fundamentals/dashboard/standalone)
+### 🔧 Manual Configuration
+
+If you prefer manual configuration without the observability package:
+
+```csharp
+services.AddOpenTelemetry()
+    .WithMetrics(metrics => 
+        metrics
+            // Register the meter name manually
+            .AddMeter(DynamoDb.DistributedLock.Metrics.MetricNames.MeterName)
+            // Views can be used to filter out specific metrics
+            .AddView(DynamoDb.DistributedLock.Metrics.MetricNames.LockReleaseTimer, MetricStreamConfiguration.Drop)
+            // Configure your preferred exporter
+            .AddOtlpExporter(options => options.Endpoint = otlpEndpoint)
+    );
+```
+
+### 🔍 Available Metrics
+
+The library emits the following metrics for observability:
+
+- **Lock acquisition counters**: Track successful and failed lock acquisitions
+- **Lock release counters**: Track successful and failed lock releases  
+- **Retry counters**: Track retry attempts and exhausted retries
+- **Timing histograms**: Measure lock acquisition and release durations
+
+### 🧪 Local Development
+
+Other options for metrics collection during development:
+- [dotnet-counters](https://learn.microsoft.com/en-us/dotnet/core/diagnostics/dotnet-counters) for real-time metrics viewing
+- [.NET Aspire dashboard](https://learn.microsoft.com/en-us/dotnet/aspire/fundamentals/dashboard/standalone) for local observability
 
 ---
 
