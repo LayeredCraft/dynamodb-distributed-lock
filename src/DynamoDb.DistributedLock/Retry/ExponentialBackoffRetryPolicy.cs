@@ -1,6 +1,8 @@
 using System;
+using System.Diagnostics.Metrics;
 using System.Threading;
 using System.Threading.Tasks;
+using DynamoDb.DistributedLock.Metrics;
 
 namespace DynamoDb.DistributedLock.Retry;
 
@@ -10,14 +12,26 @@ namespace DynamoDb.DistributedLock.Retry;
 public sealed class ExponentialBackoffRetryPolicy : IRetryPolicy
 {
     private readonly RetryOptions _options;
+    private readonly ILockMetrics _lockMetrics;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="ExponentialBackoffRetryPolicy"/> class.
+    /// Uses the default <see cref="ILockMetrics"/> instance
+    /// </summary>
+    /// <param name="options">The retry configuration options.</param>
+    public ExponentialBackoffRetryPolicy(RetryOptions options) : this(options, LockMetrics.Default)
+    {
+    }
+    
     /// <summary>
     /// Initializes a new instance of the <see cref="ExponentialBackoffRetryPolicy"/> class.
     /// </summary>
     /// <param name="options">The retry configuration options.</param>
-    public ExponentialBackoffRetryPolicy(RetryOptions options)
+    /// <param name="lockMetrics">Collects telemetry based on lock operations</param>
+    public ExponentialBackoffRetryPolicy(RetryOptions options, ILockMetrics lockMetrics)
     {
         _options = options ?? throw new ArgumentNullException(nameof(options));
+        _lockMetrics = lockMetrics ?? throw new ArgumentNullException(nameof(lockMetrics));
     }
 
     /// <inheritdoc />
@@ -38,6 +52,11 @@ public sealed class ExponentialBackoffRetryPolicy : IRetryPolicy
 
             try
             {
+                // only increment as a retry attempt if this is not the first attempt
+                if (attempt != 0)
+                {
+                    _lockMetrics.RetryAttempt();
+                }
                 return await operation(cancellationToken);
             }
             catch (Exception ex)
@@ -45,7 +64,12 @@ public sealed class ExponentialBackoffRetryPolicy : IRetryPolicy
                 lastException = ex;
                 attempt++;
 
-                if (attempt >= _options.MaxAttempts || !shouldRetry(ex))
+                if (attempt >= _options.MaxAttempts)
+                {
+                    _lockMetrics.RetriesExhausted();
+                    throw;
+                }
+                if (!shouldRetry(ex))
                 {
                     throw;
                 }

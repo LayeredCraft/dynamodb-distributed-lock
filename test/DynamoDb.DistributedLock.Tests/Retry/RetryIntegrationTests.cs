@@ -5,6 +5,7 @@ using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.Model;
 using AutoFixture.Xunit3;
 using AwesomeAssertions;
+using DynamoDb.DistributedLock.Metrics;
 using DynamoDb.DistributedLock.Retry;
 using DynamoDb.DistributedLock.Tests.TestKit.Attributes;
 using Microsoft.Extensions.Options;
@@ -20,6 +21,7 @@ public class RetryIntegrationTests
     public async Task AcquireLockAsync_WhenRetryDisabled_ShouldNotRetryOnFailure(
         [Frozen] IAmazonDynamoDB dynamo,
         [Frozen] IOptions<DynamoDbLockOptions> options,
+        [Frozen] ILockMetrics lockMetrics,
         string resourceId,
         string ownerId)
     {
@@ -28,7 +30,7 @@ public class RetryIntegrationTests
         dynamo.PutItemAsync(Arg.Any<PutItemRequest>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new ConditionalCheckFailedException("Lock exists"));
 
-        var sut = new DynamoDbDistributedLock(dynamo, options);
+        var sut = new DynamoDbDistributedLock(dynamo, options, lockMetrics);
 
         // Act
         var result = await sut.AcquireLockAsync(resourceId, ownerId, TestContext.Current.CancellationToken);
@@ -43,6 +45,7 @@ public class RetryIntegrationTests
     public async Task AcquireLockAsync_WhenRetryEnabledAndEventuallySucceeds_ShouldReturnTrue(
         [Frozen] IAmazonDynamoDB dynamo,
         [Frozen] IOptions<DynamoDbLockOptions> options,
+        [Frozen] ILockMetrics lockMetrics,
         string resourceId,
         string ownerId)
     {
@@ -61,7 +64,7 @@ public class RetryIntegrationTests
                 return new PutItemResponse();
             });
 
-        var sut = new DynamoDbDistributedLock(dynamo, options);
+        var sut = new DynamoDbDistributedLock(dynamo, options, lockMetrics);
 
         // Act
         var result = await sut.AcquireLockAsync(resourceId, ownerId, TestContext.Current.CancellationToken);
@@ -76,6 +79,7 @@ public class RetryIntegrationTests
     public async Task AcquireLockAsync_WhenRetryEnabledButMaxAttemptsReached_ShouldReturnFalse(
         [Frozen] IAmazonDynamoDB dynamo,
         [Frozen] IOptions<DynamoDbLockOptions> options,
+        [Frozen] ILockMetrics lockMetrics,
         string resourceId,
         string ownerId)
     {
@@ -87,7 +91,7 @@ public class RetryIntegrationTests
         dynamo.PutItemAsync(Arg.Any<PutItemRequest>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new ConditionalCheckFailedException("Lock exists"));
 
-        var sut = new DynamoDbDistributedLock(dynamo, options);
+        var sut = new DynamoDbDistributedLock(dynamo, options, lockMetrics);
 
         // Act
         var result = await sut.AcquireLockAsync(resourceId, ownerId, TestContext.Current.CancellationToken);
@@ -102,6 +106,7 @@ public class RetryIntegrationTests
     public async Task AcquireLockAsync_WhenRetryEnabledWithThrottling_ShouldRetryOnProvisionedThroughputExceeded(
         [Frozen] IAmazonDynamoDB dynamo,
         [Frozen] IOptions<DynamoDbLockOptions> options,
+        [Frozen] ILockMetrics lockMetrics,
         string resourceId,
         string ownerId)
     {
@@ -120,7 +125,7 @@ public class RetryIntegrationTests
                 return new PutItemResponse();
             });
 
-        var sut = new DynamoDbDistributedLock(dynamo, options);
+        var sut = new DynamoDbDistributedLock(dynamo, options, lockMetrics);
 
         // Act
         var result = await sut.AcquireLockAsync(resourceId, ownerId, TestContext.Current.CancellationToken);
@@ -135,6 +140,7 @@ public class RetryIntegrationTests
     public async Task AcquireLockAsync_WhenRetryEnabledButNonRetriableException_ShouldThrowImmediately(
         [Frozen] IAmazonDynamoDB dynamo,
         [Frozen] IOptions<DynamoDbLockOptions> options,
+        [Frozen] ILockMetrics lockMetrics,
         string resourceId,
         string ownerId)
     {
@@ -145,7 +151,7 @@ public class RetryIntegrationTests
         dynamo.PutItemAsync(Arg.Any<PutItemRequest>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new ArgumentException("Non-retriable exception"));
 
-        var sut = new DynamoDbDistributedLock(dynamo, options);
+        var sut = new DynamoDbDistributedLock(dynamo, options, lockMetrics);
 
         // Act & Assert
         var act = async () => await sut.AcquireLockAsync(resourceId, ownerId);
@@ -159,6 +165,7 @@ public class RetryIntegrationTests
     public async Task AcquireLockHandleAsync_WhenRetryEnabledAndSucceeds_ShouldReturnHandle(
         [Frozen] IAmazonDynamoDB dynamo,
         [Frozen] IOptions<DynamoDbLockOptions> options,
+        [Frozen] ILockMetrics lockMetrics,
         string resourceId,
         string ownerId)
     {
@@ -177,7 +184,7 @@ public class RetryIntegrationTests
                 return new PutItemResponse();
             });
 
-        var sut = new DynamoDbDistributedLock(dynamo, options);
+        var sut = new DynamoDbDistributedLock(dynamo, options, lockMetrics);
 
         // Act
         var result = await sut.AcquireLockHandleAsync(resourceId, ownerId, TestContext.Current.CancellationToken);
@@ -195,6 +202,7 @@ public class RetryIntegrationTests
     public async Task AcquireLockAsync_WhenRetryEnabledAndThrottlingExhaustsRetries_ShouldReturnFalse(
         [Frozen] IAmazonDynamoDB dynamo,
         [Frozen] IOptions<DynamoDbLockOptions> options,
+        [Frozen] ILockMetrics lockMetrics,
         string resourceId,
         string ownerId)
     {
@@ -206,7 +214,7 @@ public class RetryIntegrationTests
         dynamo.PutItemAsync(Arg.Any<PutItemRequest>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new ProvisionedThroughputExceededException("Throttled"));
 
-        var sut = new DynamoDbDistributedLock(dynamo, options);
+        var sut = new DynamoDbDistributedLock(dynamo, options, lockMetrics);
 
         // Act
         var result = await sut.AcquireLockAsync(resourceId, ownerId, TestContext.Current.CancellationToken);

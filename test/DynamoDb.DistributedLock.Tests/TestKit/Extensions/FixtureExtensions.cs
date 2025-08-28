@@ -1,4 +1,6 @@
+using System.Diagnostics.Metrics;
 using AutoFixture;
+using AutoFixture.Kernel;
 using DynamoDb.DistributedLock.Tests.TestKit.SpecimenBuilders;
 
 namespace DynamoDb.DistributedLock.Tests.TestKit.Extensions;
@@ -49,6 +51,31 @@ public static class FixtureExtensions
     public static IFixture AddRetryPolicy(this IFixture fixture)
     {
         fixture.Customizations.Add(new RetryPolicySpecimenBuilder());
+        return fixture;
+    }
+    
+    /// <summary>
+    /// Adds customization that creates instances needed for metrics collection in tests.
+    /// </summary>
+    /// <param name="fixture">The AutoFixture instance to customize.</param>
+    /// <returns>The same <see cref="IFixture"/> instance for chaining.</returns>
+    public static IFixture AddMetrics(this IFixture fixture)
+    {
+        fixture.Customizations.Add(new MetricsSpecimenBuilder());
+        fixture.Freeze<Meter>();
+        return fixture;
+    }
+
+    /// <summary>
+    /// Adds customizations for DynamoDbDistributedLock creation
+    /// </summary>
+    /// <param name="fixture"></param>
+    /// <returns>The same <see cref="IFixture"/> instance for chaining.</returns>
+    public static IFixture AddDynamoDbDistributedLock(this IFixture fixture)
+    {
+        // we need constructor selection to be greedy to pick up the optional parameters
+        fixture.Customize<DynamoDbDistributedLock>(x => 
+            x.FromFactory(new MethodInvoker(new GreedyConstructorQuery())));
         return fixture;
     }
 }

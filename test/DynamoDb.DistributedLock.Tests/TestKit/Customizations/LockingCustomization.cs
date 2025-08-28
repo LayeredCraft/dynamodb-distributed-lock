@@ -13,6 +13,9 @@ public class LockingCustomization : ICustomization
     public void Customize(IFixture fixture)
     {
         fixture.Customize(new AutoNSubstituteCustomization());
+        
+        // add metrics customizations
+        fixture.AddMetrics();
 
         // 🔒 Inject a null-value IOptions<DynamoDbLockOptions> for specific test scenarios
         fixture.AddNullDynamoDbLockOptions();
@@ -21,6 +24,9 @@ public class LockingCustomization : ICustomization
         
         // 🔗 Add DistributedLockHandle customization
         fixture.AddDistributedLockHandle();
+        
+        // Add DynamoDbDistributedLock
+        fixture.AddDynamoDbDistributedLock();
         
         // 🔄 Add retry policy customization
         fixture.AddRetryPolicy();
