@@ -9,7 +9,7 @@ jobs:
   build:
     uses: LayeredCraft/devops-templates/.github/workflows/pr-build.yaml@v6.2
     with:
-      solution: DynamoDb.DistributedLock.sln
+      solution: DynamoDb.DistributedLock.slnx
       hasTests: true
       dotnetVersion: |
         8.0.x
