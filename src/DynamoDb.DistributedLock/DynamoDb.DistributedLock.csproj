@@ -19,18 +19,18 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="AWSSDK.DynamoDBv2" Version="4.0.9.5" />
-        <PackageReference Include="AWSSDK.Extensions.NETCore.Setup" Version="4.0.3.11" />
+        <PackageReference Include="AWSSDK.DynamoDBv2" Version="4.0.10.4" />
+        <PackageReference Include="AWSSDK.Extensions.NETCore.Setup" Version="4.0.3.17" />
     </ItemGroup>
     <ItemGroup Condition="'$(TargetFramework)' == 'net8.0' or '$(TargetFramework)' == 'netstandard2.0' or '$(TargetFramework)' == 'netstandard2.1'">
-        <PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="8.0.2" />
-        <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="8.0.1" />
-        <PackageReference Include="Microsoft.Extensions.Options" Version="8.0.2" />
+        <PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="10.0.1" />
+        <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.1" />
+        <PackageReference Include="Microsoft.Extensions.Options" Version="10.0.1" />
     </ItemGroup>
     <ItemGroup Condition="'$(TargetFramework)' == 'net9.0'">
-        <PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="9.0.11" />
-        <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="9.0.11" />
-        <PackageReference Include="Microsoft.Extensions.Options" Version="9.0.11" />
+        <PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="10.0.1" />
+        <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.1" />
+        <PackageReference Include="Microsoft.Extensions.Options" Version="10.0.1" />
     </ItemGroup>
     <ItemGroup Condition="'$(TargetFramework)' == 'net10.0'">
         <PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="10.0.0" />
@@ -44,6 +44,7 @@
     </ItemGroup>
 
     <ItemGroup>
+      <PackageReference Include="Microsoft.Extensions.Configuration" Version="10.0.1" />
         <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
             <_Parameter1>DynamoDb.DistributedLock.Tests</_Parameter1>
         </AssemblyAttribute>
