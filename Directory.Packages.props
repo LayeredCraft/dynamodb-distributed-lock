@@ -3,11 +3,11 @@
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
   </PropertyGroup>
   <ItemGroup Label="AWS SDK">
-    <PackageVersion Include="AWSSDK.DynamoDBv2" Version="4.0.21.7" />
-    <PackageVersion Include="AWSSDK.Extensions.NETCore.Setup" Version="4.0.4.11" />
+    <PackageVersion Include="AWSSDK.DynamoDBv2" Version="4.0.101.2" />
+    <PackageVersion Include="AWSSDK.Extensions.NETCore.Setup" Version="4.0.100.4" />
   </ItemGroup>
   <ItemGroup Label="Microsoft">
-    <PackageVersion Include="Microsoft.SourceLink.GitHub" Version="10.0.300" />
+    <PackageVersion Include="Microsoft.SourceLink.GitHub" Version="10.0.301" />
   </ItemGroup>
   <!-- Microsoft.Extensions.* packages ship parallel stable and preview build lines.
        Pin each per-TargetFramework with bounded ranges so Dependabot can raise
@@ -47,9 +47,9 @@
     <PackageVersion Include="AutoFixture.AutoNSubstitute" Version="4.18.1" />
     <PackageVersion Include="AutoFixture.Xunit3" Version="4.19.0" />
     <PackageVersion Include="AwesomeAssertions" Version="9.4.0" />
-    <PackageVersion Include="Microsoft.Extensions.Diagnostics.Testing" Version="10.7.0" />
-    <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="18.7.0" />
-    <PackageVersion Include="Microsoft.Testing.Extensions.CodeCoverage" Version="18.8.0" />
+    <PackageVersion Include="Microsoft.Extensions.Diagnostics.Testing" Version="10.8.0" />
+    <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="18.8.1" />
+    <PackageVersion Include="Microsoft.Testing.Extensions.CodeCoverage" Version="18.9.0" />
     <PackageVersion Include="NSubstitute" Version="5.3.0" />
     <PackageVersion Include="xunit.runner.visualstudio" Version="3.1.5" />
     <PackageVersion Include="xunit.v3.mtp-v2" Version="3.2.2" />
