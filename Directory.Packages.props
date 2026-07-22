@@ -9,36 +9,39 @@
   <ItemGroup Label="Microsoft">
     <PackageVersion Include="Microsoft.SourceLink.GitHub" Version="10.0.300" />
   </ItemGroup>
-  <!--
-    NOTE: This repo intentionally pins Microsoft.Extensions packages by TFM.
-    This mirrors the conditional versions previously specified in the individual .csproj files.
-  -->
+  <!-- Microsoft.Extensions.* packages ship parallel stable and preview build lines.
+       Pin each per-TargetFramework with bounded ranges so Dependabot can raise
+       lower bounds without crossing into the next major/preview line. -->
   <ItemGroup Label="Microsoft (TFM pinned)" Condition="'$(TargetFramework)' == 'net8.0' Or '$(TargetFramework)' == 'netstandard2.0' Or '$(TargetFramework)' == 'netstandard2.1'">
-    <PackageVersion Include="Microsoft.Extensions.Configuration" Version="8.0.0" />
-    <PackageVersion Include="Microsoft.Extensions.Configuration.Binder" Version="8.0.2" />
-    <PackageVersion Include="Microsoft.Extensions.DependencyInjection" Version="8.0.1" />
-    <PackageVersion Include="Microsoft.Extensions.Options" Version="8.0.2" />
+    <PackageVersion Include="Microsoft.Extensions.Configuration" Version="[8.0.0, 9.0.0)" />
+    <PackageVersion Include="Microsoft.Extensions.Configuration.Binder" Version="[8.0.2, 9.0.0)" />
+    <PackageVersion Include="Microsoft.Extensions.DependencyInjection" Version="[8.0.1, 9.0.0)" />
+    <PackageVersion Include="Microsoft.Extensions.Options" Version="[8.0.2, 9.0.0)" />
   </ItemGroup>
   <ItemGroup Label="Microsoft (TFM pinned)" Condition="'$(TargetFramework)' == 'net9.0'">
-    <PackageVersion Include="Microsoft.Extensions.Configuration" Version="9.0.17" />
-    <PackageVersion Include="Microsoft.Extensions.Configuration.Binder" Version="9.0.17" />
-    <PackageVersion Include="Microsoft.Extensions.DependencyInjection" Version="9.0.17" />
-    <PackageVersion Include="Microsoft.Extensions.Options" Version="9.0.17" />
+    <PackageVersion Include="Microsoft.Extensions.Configuration" Version="[9.0.17, 10.0.0)" />
+    <PackageVersion Include="Microsoft.Extensions.Configuration.Binder" Version="[9.0.17, 10.0.0)" />
+    <PackageVersion Include="Microsoft.Extensions.DependencyInjection" Version="[9.0.17, 10.0.0)" />
+    <PackageVersion Include="Microsoft.Extensions.Options" Version="[9.0.17, 10.0.0)" />
   </ItemGroup>
   <ItemGroup Label="Microsoft (TFM pinned)" Condition="'$(TargetFramework)' == 'net10.0'">
-    <PackageVersion Include="Microsoft.Extensions.Configuration" Version="10.0.9" />
-    <PackageVersion Include="Microsoft.Extensions.Configuration.Binder" Version="10.0.9" />
-    <PackageVersion Include="Microsoft.Extensions.DependencyInjection" Version="10.0.9" />
-    <PackageVersion Include="Microsoft.Extensions.Options" Version="10.0.9" />
+    <PackageVersion Include="Microsoft.Extensions.Configuration" Version="[10.0.9, 11.0.0)" />
+    <PackageVersion Include="Microsoft.Extensions.Configuration.Binder" Version="[10.0.9, 11.0.0)" />
+    <PackageVersion Include="Microsoft.Extensions.DependencyInjection" Version="[10.0.9, 11.0.0)" />
+    <PackageVersion Include="Microsoft.Extensions.Options" Version="[10.0.9, 11.0.0)" />
   </ItemGroup>
   <ItemGroup Label="OpenTelemetry">
     <PackageVersion Include="OpenTelemetry" Version="1.16.0" />
   </ItemGroup>
+  <!-- Lower bound is a prerelease, which causes NuGet to consider prerelease
+       candidates for these package IDs. Use a letter-led prerelease marker on
+       the exclusive upper bound so the ranges stay below all 12.0.0 previews
+       as well as 12.0.0 stable. -->
   <ItemGroup Label="Microsoft (TFM pinned)" Condition="'$(TargetFramework)' == 'net11.0'">
-    <PackageVersion Include="Microsoft.Extensions.Configuration" Version="11.0.0-preview.5.26302.115" />
-    <PackageVersion Include="Microsoft.Extensions.Configuration.Binder" Version="11.0.0-preview.5.26302.115" />
-    <PackageVersion Include="Microsoft.Extensions.DependencyInjection" Version="11.0.0-preview.5.26302.115" />
-    <PackageVersion Include="Microsoft.Extensions.Options" Version="11.0.0-preview.5.26302.115" />
+    <PackageVersion Include="Microsoft.Extensions.Configuration" Version="[11.0.0-preview.5.26302.115, 12.0.0-a)" />
+    <PackageVersion Include="Microsoft.Extensions.Configuration.Binder" Version="[11.0.0-preview.5.26302.115, 12.0.0-a)" />
+    <PackageVersion Include="Microsoft.Extensions.DependencyInjection" Version="[11.0.0-preview.5.26302.115, 12.0.0-a)" />
+    <PackageVersion Include="Microsoft.Extensions.Options" Version="[11.0.0-preview.5.26302.115, 12.0.0-a)" />
   </ItemGroup>
   <ItemGroup Label="Testing">
     <PackageVersion Include="AutoFixture.AutoNSubstitute" Version="4.18.1" />
