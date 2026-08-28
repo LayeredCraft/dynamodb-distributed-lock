@@ -63,7 +63,7 @@ public class DynamoDbDistributedLockTests
             .Returns(Task.FromResult(new PutItemResponse()));
 
         // Act
-        var result = await sut.AcquireLockAsync(resourceId, ownerId, CancellationToken.None);
+        var result = await sut.AcquireLockAsync(resourceId, ownerId, TestContext.Current.CancellationToken);
 
         // Assert
         result.Should().BeTrue();
@@ -83,7 +83,7 @@ public class DynamoDbDistributedLockTests
             .Throws(new ConditionalCheckFailedException("lock exists"));
 
         // Act
-        var result = await sut.AcquireLockAsync(resourceId, ownerId, CancellationToken.None);
+        var result = await sut.AcquireLockAsync(resourceId, ownerId, TestContext.Current.CancellationToken);
 
         // Assert
         result.Should().BeFalse();
@@ -103,7 +103,7 @@ public class DynamoDbDistributedLockTests
             .Throws(new InvalidOperationException("unexpected failure"));
 
         // Act
-        var act = async () => await sut.AcquireLockAsync(resourceId, ownerId, CancellationToken.None);
+        var act = async () => await sut.AcquireLockAsync(resourceId, ownerId, TestContext.Current.CancellationToken);
 
         // Assert
         await act.Should().ThrowAsync<InvalidOperationException>();
@@ -127,7 +127,7 @@ public class DynamoDbDistributedLockTests
             .Returns(Task.FromResult(new DeleteItemResponse()));
 
         // Act
-        var result = await sut.ReleaseLockAsync(resourceId, ownerId, CancellationToken.None);
+        var result = await sut.ReleaseLockAsync(resourceId, ownerId, TestContext.Current.CancellationToken);
 
         // Assert
         result.Should().BeTrue();
@@ -151,7 +151,7 @@ public class DynamoDbDistributedLockTests
             .Throws(new ConditionalCheckFailedException("owner mismatch"));
 
         // Act
-        var result = await sut.ReleaseLockAsync(resourceId, ownerId, CancellationToken.None);
+        var result = await sut.ReleaseLockAsync(resourceId, ownerId, TestContext.Current.CancellationToken);
 
         // Assert
         result.Should().BeFalse();
@@ -175,7 +175,7 @@ public class DynamoDbDistributedLockTests
             .Throws(new InvalidOperationException("unexpected failure"));
 
         // Act
-        var act = async () => await sut.ReleaseLockAsync(resourceId, ownerId, CancellationToken.None);
+        var act = async () => await sut.ReleaseLockAsync(resourceId, ownerId, TestContext.Current.CancellationToken);
 
         // Assert
         await act.Should().ThrowAsync<InvalidOperationException>();
@@ -199,7 +199,7 @@ public class DynamoDbDistributedLockTests
             .Returns(Task.FromResult(new PutItemResponse()));
 
         // Act
-        var result = await sut.AcquireLockHandleAsync(resourceId, ownerId, CancellationToken.None);
+        var result = await sut.AcquireLockHandleAsync(resourceId, ownerId, TestContext.Current.CancellationToken);
 
         // Assert
         result.Should().NotBeNull();
@@ -228,7 +228,7 @@ public class DynamoDbDistributedLockTests
             .Throws(new ConditionalCheckFailedException("lock exists"));
 
         // Act
-        var result = await sut.AcquireLockHandleAsync(resourceId, ownerId, CancellationToken.None);
+        var result = await sut.AcquireLockHandleAsync(resourceId, ownerId, TestContext.Current.CancellationToken);
 
         // Assert
         result.Should().BeNull();
@@ -253,7 +253,7 @@ public class DynamoDbDistributedLockTests
             .Throws(new InvalidOperationException("unexpected failure"));
 
         // Act
-        var act = async () => await sut.AcquireLockHandleAsync(resourceId, ownerId, CancellationToken.None);
+        var act = async () => await sut.AcquireLockHandleAsync(resourceId, ownerId, TestContext.Current.CancellationToken);
 
         // Assert
         await act.Should().ThrowAsync<InvalidOperationException>();
@@ -286,7 +286,7 @@ public class DynamoDbDistributedLockTests
             .Returns(Task.FromResult(new DeleteItemResponse()));
 
         // Act
-        var handle = await sut.AcquireLockHandleAsync(resourceId, ownerId, CancellationToken.None);
+        var handle = await sut.AcquireLockHandleAsync(resourceId, ownerId, TestContext.Current.CancellationToken);
         await handle!.DisposeAsync();
 
         // Assert
@@ -332,13 +332,13 @@ public class DynamoDbDistributedLockTests
         dynamo.Configure()
             .PutItemAsync(new PutItemRequest(), CancellationToken.None)
             .Returns(DelayedPutItemResponseAsync());
-        var acquired = await sut.AcquireLockAsync(resourceId, ownerId, CancellationToken.None);
+        var acquired = await sut.AcquireLockAsync(resourceId, ownerId, TestContext.Current.CancellationToken);
 
         // Arrange + Act (release)
         dynamo.Configure()
             .DeleteItemAsync(new DeleteItemRequest(), CancellationToken.None)
             .Returns(DelayedDeleteItemResponseAsync());
-        var released = await sut.ReleaseLockAsync(resourceId, ownerId, CancellationToken.None);
+        var released = await sut.ReleaseLockAsync(resourceId, ownerId, TestContext.Current.CancellationToken);
 
         // Assert
         acquired.Should().BeTrue();
