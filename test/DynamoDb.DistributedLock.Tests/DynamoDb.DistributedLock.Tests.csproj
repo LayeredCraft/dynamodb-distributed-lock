@@ -10,6 +10,7 @@
         <TestingPlatformDotnetTestSupport>true</TestingPlatformDotnetTestSupport>
         <UseMicrosoftTestingPlatformRunner>true</UseMicrosoftTestingPlatformRunner>
         <IsPackable>false</IsPackable>
+        <ComponoGeneratedTestDoubles>true</ComponoGeneratedTestDoubles>
     </PropertyGroup>
     <PropertyGroup>
         <IsTestProject>true</IsTestProject>
@@ -24,14 +25,14 @@
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="AutoFixture.AutoNSubstitute"/>
-        <PackageReference Include="AutoFixture.Xunit3"/>
         <PackageReference Include="AwesomeAssertions" />
+        <PackageReference Include="Compono" />
+        <PackageReference Include="Compono.XunitV3" />
+        <PackageReference Include="Compono.TestDoubles" />
         <PackageReference Include="Microsoft.Extensions.Configuration" />
         <PackageReference Include="Microsoft.Extensions.Diagnostics.Testing" />
         <PackageReference Include="Microsoft.NET.Test.Sdk" />
         <PackageReference Include="Microsoft.Testing.Extensions.CodeCoverage" />
-        <PackageReference Include="NSubstitute"/>
         <PackageReference Include="xunit.v3.mtp-v2" />
         <PackageReference Include="xunit.runner.visualstudio">
             <PrivateAssets>all</PrivateAssets>

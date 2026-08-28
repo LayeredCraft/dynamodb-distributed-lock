@@ -1,22 +1,17 @@
-using System;
 using System.Diagnostics.Metrics;
-using System.Threading;
-using System.Threading.Tasks;
-using AutoFixture.Xunit3;
 using AwesomeAssertions;
+using Compono.XunitV3;
 using DynamoDb.DistributedLock.Metrics;
 using DynamoDb.DistributedLock.Retry;
 using DynamoDb.DistributedLock.Tests.Metrics;
-using DynamoDb.DistributedLock.Tests.TestKit.Attributes;
-using DynamoDb.DistributedLock.Tests.TestKit.Extensions;
-using Microsoft.Extensions.Diagnostics.Metrics.Testing;
+using DynamoDb.DistributedLock.Tests.TestKit.Profiles;
 
 namespace DynamoDb.DistributedLock.Tests.Retry;
 
 public class ExponentialBackoffRetryPolicyTests
 {
     [Theory]
-    [DynamoDbDistributedLockAutoData]
+    [Compose<DynamoDbDistributedLockGeneratedTestDoubleProfile>]
     public void Constructor_WhenOptionsIsNull_ShouldThrowArgumentNullException(ILockMetrics lockMetrics)
     {
         var act = () => new ExponentialBackoffRetryPolicy(null!, lockMetrics);
@@ -24,9 +19,9 @@ public class ExponentialBackoffRetryPolicyTests
         act.Should().Throw<ArgumentNullException>()
             .Which.ParamName.Should().Be("options");
     }
-    
+
     [Theory]
-    [DynamoDbDistributedLockAutoData]
+    [Compose<DynamoDbDistributedLockGeneratedTestDoubleProfile>]
     public void Constructor_WhenLockMetricsIsNull_ShouldThrowArgumentNullException(RetryOptions retryOptions)
     {
         var act = () => new ExponentialBackoffRetryPolicy(retryOptions, null!);
@@ -36,7 +31,7 @@ public class ExponentialBackoffRetryPolicyTests
     }
 
     [Theory]
-    [DynamoDbDistributedLockAutoData]
+    [Compose<DynamoDbDistributedLockGeneratedTestDoubleProfile>]
     public async Task ExecuteAsync_WhenOperationIsNull_ShouldThrowArgumentNullException(
         ExponentialBackoffRetryPolicy sut)
     {
@@ -47,7 +42,7 @@ public class ExponentialBackoffRetryPolicyTests
     }
 
     [Theory]
-    [DynamoDbDistributedLockAutoData]
+    [Compose<DynamoDbDistributedLockGeneratedTestDoubleProfile>]
     public async Task ExecuteAsync_WhenShouldRetryIsNull_ShouldThrowArgumentNullException(
         ExponentialBackoffRetryPolicy sut)
     {
@@ -58,7 +53,7 @@ public class ExponentialBackoffRetryPolicyTests
     }
 
     [Theory]
-    [DynamoDbDistributedLockAutoData]
+    [Compose<DynamoDbDistributedLockGeneratedTestDoubleProfile>]
     public async Task ExecuteAsync_WhenOperationSucceedsOnFirstAttempt_ShouldReturnResult(
         RetryOptions options,
         ILockMetrics lockMetrics,
@@ -78,7 +73,7 @@ public class ExponentialBackoffRetryPolicyTests
     }
 
     [Theory]
-    [DynamoDbDistributedLockAutoData]
+    [Compose<DynamoDbDistributedLockGeneratedTestDoubleProfile>]
     public async Task ExecuteAsync_WhenOperationFailsButShouldNotRetry_ShouldThrowImmediately(
         RetryOptions options,
         ILockMetrics lockMetrics)
@@ -102,9 +97,9 @@ public class ExponentialBackoffRetryPolicyTests
     }
 
     [Theory]
-    [DynamoDbDistributedLockAutoData]
+    [Compose<DynamoDbDistributedLockGeneratedTestDoubleProfile>]
     public async Task ExecuteAsync_WhenOperationFailsAndShouldRetry_ShouldRetryUpToMaxAttempts(
-        RetryOptions options, ILockMetrics lockMetrics, TestMetricAggregator<int> metricAggregator)
+        [Shared] Meter meter, RetryOptions options, ILockMetrics lockMetrics, TestMetricAggregator<int> metricAggregator)
     {
         options.MaxAttempts = 3;
         options.BaseDelay = TimeSpan.FromMilliseconds(1); // Fast test
@@ -129,8 +124,9 @@ public class ExponentialBackoffRetryPolicyTests
     }
 
     [Theory]
-    [DynamoDbDistributedLockAutoData]
+    [Compose<DynamoDbDistributedLockGeneratedTestDoubleProfile>]
     public async Task ExecuteAsync_WhenOperationSucceedsAfterRetries_ShouldReturnResult(
+        [Shared] Meter meter,
         RetryOptions options,
         ILockMetrics lockMetrics,
         TestMetricAggregator<int> metricAggregator,
@@ -151,13 +147,13 @@ public class ExponentialBackoffRetryPolicyTests
 
         result.Should().Be(expectedResult);
         operationCalled.Should().Be(3);
-        
+
         metricAggregator.Collect(MetricNames.RetryAttempt).Should().HaveCount(2); // 2 retries after the first failure before success
         metricAggregator.Collect(MetricNames.RetriesExhausted).Should().BeEmpty(); // Should not be exhausted
     }
 
     [Theory]
-    [DynamoDbDistributedLockAutoData]
+    [Compose<DynamoDbDistributedLockGeneratedTestDoubleProfile>]
     public async Task ExecuteAsync_WhenCancellationRequested_ShouldThrowOperationCanceledException(
         RetryOptions options,
         ILockMetrics lockMetrics)

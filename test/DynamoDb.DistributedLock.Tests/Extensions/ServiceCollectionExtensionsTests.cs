@@ -1,18 +1,23 @@
 using Amazon.DynamoDBv2;
 using Amazon.Extensions.NETCore.Setup;
 using Amazon.Runtime;
-using DynamoDb.DistributedLock.Extensions;
-using DynamoDb.DistributedLock.Tests.TestKit.Attributes;
 using AwesomeAssertions;
+using Compono;
+using Compono.XunitV3;
+using DynamoDb.DistributedLock.Extensions;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
-using NSubstitute;
 
 namespace DynamoDb.DistributedLock.Tests.Extensions;
 
 public class ServiceCollectionExtensionsTests
 {
+    // This only needs a working IAmazonDynamoDB instance to bypass credential resolution - no
+    // Configure()/Verify() call needed here.
+    private static IAmazonDynamoDB CreateDynamoDbDouble() =>
+        Composer.Create(builder => builder.UseGeneratedTestDoubles()).Create<IAmazonDynamoDB>();
+
     [Fact]
     public void AddDynamoDbDistributedLock_WithAction_SetsUpServiceAndOptions()
     {
@@ -26,9 +31,9 @@ public class ServiceCollectionExtensionsTests
             options.LockTimeoutSeconds = 45;
         });
 
-        // 👇 Override with mock AFTER to bypass credential resolution
-        services.AddSingleton(Substitute.For<IAmazonDynamoDB>());
-        
+        // 👇 Override with a double AFTER to bypass credential resolution
+        services.AddSingleton(CreateDynamoDbDouble());
+
         var provider = services.BuildServiceProvider();
 
         // Assert
@@ -60,8 +65,8 @@ public class ServiceCollectionExtensionsTests
 
         // Act
         services.AddDynamoDbDistributedLock(configuration);
-        // 👇 Override with mock AFTER to bypass credential resolution
-        services.AddSingleton(Substitute.For<IAmazonDynamoDB>());
+        // 👇 Override with a double AFTER to bypass credential resolution
+        services.AddSingleton(CreateDynamoDbDouble());
         var provider = services.BuildServiceProvider();
 
         // Assert
@@ -74,8 +79,9 @@ public class ServiceCollectionExtensionsTests
         options.PartitionKeyAttribute.Should().Be("pk");
         options.SortKeyAttribute.Should().Be("sk");
     }
-    
-    [Theory, BaseAutoData]
+
+    [Theory]
+    [Compose]
     public void AddDynamoDbDistributedLock_WithAction_SetsCustomKeyAttributes(string partitionKey, string sortKey)
     {
         var services = new ServiceCollection();
@@ -88,7 +94,7 @@ public class ServiceCollectionExtensionsTests
             options.SortKeyAttribute = sortKey;
         });
 
-        services.AddSingleton(Substitute.For<IAmazonDynamoDB>());
+        services.AddSingleton(CreateDynamoDbDouble());
         var provider = services.BuildServiceProvider();
 
         var options = provider.GetRequiredService<IOptions<DynamoDbLockOptions>>().Value;
@@ -97,7 +103,8 @@ public class ServiceCollectionExtensionsTests
         options.SortKeyAttribute.Should().Be(sortKey);
     }
 
-    [Theory, BaseAutoData]
+    [Theory]
+    [Compose]
     public void AddDynamoDbDistributedLock_WithConfiguration_BindsCustomKeyAttributes(string partitionKey, string sortKey)
     {
         var inMemorySettings = new Dictionary<string, string>
@@ -114,7 +121,7 @@ public class ServiceCollectionExtensionsTests
 
         var services = new ServiceCollection();
         services.AddDynamoDbDistributedLock(configuration);
-        services.AddSingleton(Substitute.For<IAmazonDynamoDB>());
+        services.AddSingleton(CreateDynamoDbDouble());
         var provider = services.BuildServiceProvider();
 
         var options = provider.GetRequiredService<IOptions<DynamoDbLockOptions>>().Value;
@@ -122,7 +129,7 @@ public class ServiceCollectionExtensionsTests
         options.PartitionKeyAttribute.Should().Be(partitionKey);
         options.SortKeyAttribute.Should().Be(sortKey);
     }
-    
+
     [Fact]
     public void AddDynamoDbDistributedLock_WithActionAndAwsConfig_SetsUpServiceAndOptions()
     {
@@ -141,7 +148,7 @@ public class ServiceCollectionExtensionsTests
             options.TableName = "locks";
             options.LockTimeoutSeconds = 45;
         }, awsOptions);
-        
+
         var provider = services.BuildServiceProvider();
 
         // Assert
@@ -153,7 +160,7 @@ public class ServiceCollectionExtensionsTests
         options.LockTimeoutSeconds.Should().Be(45);
         options.PartitionKeyAttribute.Should().Be("pk");
         options.SortKeyAttribute.Should().Be("sk");
-        
+
         var dynamoDbClient = provider.GetRequiredService<IAmazonDynamoDB>();
         dynamoDbClient.Config.ServiceURL.Should().Be("http://localhost/");
     }

@@ -90,6 +90,10 @@ exclude-labels:
   - 'internal'
 
 template: |
+  ## Summary
+
+  SUMMARY_GOES_HERE
+
   ## Changes
 
   $CHANGES
