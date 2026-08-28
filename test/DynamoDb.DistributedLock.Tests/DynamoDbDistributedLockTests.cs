@@ -311,11 +311,22 @@ public class DynamoDbDistributedLockTests
     {
         // No argument matching or per-call sequencing needed here - a literal discriminator argument
         // selects the (PutItemRequest, CancellationToken)/(DeleteItemRequest, CancellationToken)
-        // overload, and a pre-built, already-in-flight delayed Task (not a callback) is enough to make
-        // the timer histogram below observe a non-zero duration. Each Configure() call is deferred
-        // until immediately before the SUT call it backs - unlike the retry-loop tests, these are two
-        // separate, test-controlled SUT operations, so there's no need for the double to compute the
-        // delay lazily at invocation time; reconfiguring between them is enough.
+        // overload. Each Configure() call is deferred until immediately before the SUT call it backs -
+        // unlike the retry-loop tests, these are two separate, test-controlled SUT operations, so
+        // reconfiguring between them is enough for the RIGHT response to be in play for each call.
+        //
+        // Codex review (LayeredCraft/dynamodb-distributed-lock#76): Compono.TestDoubles has no
+        // invocation-aware callback - `DelayedPutItemResponseAsync()`/`DelayedDeleteItemResponseAsync()`
+        // are eagerly invoked (and their own Task.Delay starts counting) at Configure() time, one
+        // statement BEFORE the SUT actually awaits them, not when the SUT invokes the double. Any
+        // scheduling/composition overhead between that Configure() call and the SUT's own internal
+        // stopwatch starting eats directly into the delay budget, which a tight ~5ms delay against a
+        // ">4" threshold has essentially no margin to absorb - a real, observed CI flake (2.21ms
+        // measured, not a lock-acquisition correctness bug). Compono.NSubstitute's invocation-aware
+        // `Returns(callInfo => ...)` would eliminate the race entirely, but reintroducing it here
+        // would partially undo the very NSubstitute-removal this migration is about. Widening the
+        // delay/threshold margin instead: even several milliseconds of Arrange-to-await overhead can't
+        // push the measured duration below a threshold this far under the configured delay.
 
         // Arrange + Act (acquire)
         dynamo.Configure()
@@ -334,23 +345,25 @@ public class DynamoDbDistributedLockTests
         released.Should().BeTrue();
 
         var acquisitionTimer = metricAggregator.Collect(MetricNames.LockAcquireTimer).Single();
-        acquisitionTimer.Value.Should().BeGreaterThan(4);
+        acquisitionTimer.Value.Should().BeGreaterThan(20);
 
         var releaseTimer = metricAggregator.Collect(MetricNames.LockReleaseTimer).Single();
-        releaseTimer.Value.Should().BeGreaterThan(4);
+        releaseTimer.Value.Should().BeGreaterThan(20);
     }
 
     private static async Task<PutItemResponse> DelayedPutItemResponseAsync()
     {
-        // simulate some delay to ensure the timer above captures it
-        await Task.Delay(TimeSpan.FromMilliseconds(5));
+        // simulate some delay to ensure the timer above captures it - see the caller's own comment
+        // for why this needs a generous margin over the ">20" assertion threshold.
+        await Task.Delay(TimeSpan.FromMilliseconds(100));
         return new PutItemResponse();
     }
 
     private static async Task<DeleteItemResponse> DelayedDeleteItemResponseAsync()
     {
-        // simulate some delay to ensure the timer above captures it
-        await Task.Delay(TimeSpan.FromMilliseconds(5));
+        // simulate some delay to ensure the timer above captures it - see the caller's own comment
+        // for why this needs a generous margin over the ">20" assertion threshold.
+        await Task.Delay(TimeSpan.FromMilliseconds(100));
         return new DeleteItemResponse();
     }
 }
