@@ -1,22 +1,22 @@
+using System.Diagnostics.Metrics;
 using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.Model;
-using AutoFixture.Xunit3;
-using DynamoDb.DistributedLock.Tests.TestKit.Attributes;
 using AwesomeAssertions;
+using Compono;
+using Compono.XunitV3;
 using DynamoDb.DistributedLock.Metrics;
 using DynamoDb.DistributedLock.Tests.Metrics;
-using DynamoDb.DistributedLock.Tests.TestKit.Extensions;
+using DynamoDb.DistributedLock.Tests.TestKit.Profiles;
 using Microsoft.Extensions.Options;
-using NSubstitute;
-using NSubstitute.ExceptionExtensions;
 
 namespace DynamoDb.DistributedLock.Tests;
 
 public class DynamoDbDistributedLockTests
 {
     [Theory]
-    [DynamoDbDistributedLockAutoData]
-    public void Constructor_WhenClientIsNull_ShouldThrowArgumentNullException(IOptions<DynamoDbLockOptions> options, 
+    [Compose<DynamoDbDistributedLockGeneratedTestDoubleProfile>]
+    public void Constructor_WhenClientIsNull_ShouldThrowArgumentNullException(
+        IOptions<DynamoDbLockOptions> options,
         ILockMetrics lockMetrics)
     {
         Action act = () => _ = new DynamoDbDistributedLock(null!, options, lockMetrics);
@@ -26,7 +26,7 @@ public class DynamoDbDistributedLockTests
     }
 
     [Theory]
-    [DynamoDbDistributedLockAutoData]
+    [Compose<DynamoDbDistributedLockGeneratedTestDoubleProfile>]
     public void Constructor_WhenOptionsValueIsNull_ShouldThrowArgumentNullException(
         IAmazonDynamoDB client,
         IOptions<DynamoDbLockOptions> nullOptions,
@@ -37,9 +37,9 @@ public class DynamoDbDistributedLockTests
         act.Should().Throw<ArgumentNullException>()
             .Which.ParamName.Should().Be("options");
     }
-    
+
     [Theory]
-    [DynamoDbDistributedLockAutoData]
+    [Compose<DynamoDbDistributedLockGeneratedTestDoubleProfile>]
     public void Constructor_WhenLockMetricsValueIsNull_ShouldThrowArgumentNullException(
         IAmazonDynamoDB client,
         IOptions<DynamoDbLockOptions> options)
@@ -51,17 +51,19 @@ public class DynamoDbDistributedLockTests
     }
 
     [Theory]
-    [DynamoDbDistributedLockAutoData]
+    [Compose<DynamoDbDistributedLockGeneratedTestDoubleProfile>]
     public async Task AcquireLockAsync_WhenLockIsAvailable_ShouldReturnTrue(
-        [Frozen] IAmazonDynamoDB dynamo, TestMetricAggregator<int> metricAggregator,
+        [Shared] Meter meter, [Shared] IAmazonDynamoDB dynamo, TestMetricAggregator<int> metricAggregator,
         DynamoDbDistributedLock sut, string resourceId, string ownerId)
     {
-        // Arrange
-        dynamo.PutItemAsync(Arg.Any<PutItemRequest>(), Arg.Any<CancellationToken>())
-            .Returns(new PutItemResponse());
+        // Arrange - no argument matching needed (a blanket response regardless of args); a literal
+        // discriminator argument just selects the (PutItemRequest, CancellationToken) overload.
+        dynamo.Configure()
+            .PutItemAsync(new PutItemRequest(), CancellationToken.None)
+            .Returns(Task.FromResult(new PutItemResponse()));
 
         // Act
-        var result = await sut.AcquireLockAsync(resourceId, ownerId, CancellationToken.None);
+        var result = await sut.AcquireLockAsync(resourceId, ownerId, TestContext.Current.CancellationToken);
 
         // Assert
         result.Should().BeTrue();
@@ -70,17 +72,18 @@ public class DynamoDbDistributedLockTests
     }
 
     [Theory]
-    [DynamoDbDistributedLockAutoData]
+    [Compose<DynamoDbDistributedLockGeneratedTestDoubleProfile>]
     public async Task AcquireLockAsync_WhenLockAlreadyExists_ShouldReturnFalse(
-        [Frozen] IAmazonDynamoDB dynamo, TestMetricAggregator<int> metricAggregator,
+        [Shared] Meter meter, [Shared] IAmazonDynamoDB dynamo, TestMetricAggregator<int> metricAggregator,
         DynamoDbDistributedLock sut, string resourceId, string ownerId)
     {
         // Arrange
-        dynamo.PutItemAsync(Arg.Any<PutItemRequest>(), Arg.Any<CancellationToken>())
-            .ThrowsAsync(new ConditionalCheckFailedException("lock exists"));
+        dynamo.Configure()
+            .PutItemAsync(new PutItemRequest(), CancellationToken.None)
+            .Throws(new ConditionalCheckFailedException("lock exists"));
 
         // Act
-        var result = await sut.AcquireLockAsync(resourceId, ownerId, CancellationToken.None);
+        var result = await sut.AcquireLockAsync(resourceId, ownerId, TestContext.Current.CancellationToken);
 
         // Assert
         result.Should().BeFalse();
@@ -89,17 +92,18 @@ public class DynamoDbDistributedLockTests
     }
 
     [Theory]
-    [DynamoDbDistributedLockAutoData]
+    [Compose<DynamoDbDistributedLockGeneratedTestDoubleProfile>]
     public async Task AcquireLockAsync_WhenUnexpectedExceptionOccurs_ShouldThrow(
-        [Frozen] IAmazonDynamoDB dynamo, TestMetricAggregator<int> metricAggregator,
+        [Shared] Meter meter, [Shared] IAmazonDynamoDB dynamo, TestMetricAggregator<int> metricAggregator,
         DynamoDbDistributedLock sut, string resourceId, string ownerId)
     {
         // Arrange
-        dynamo.PutItemAsync(Arg.Any<PutItemRequest>(), Arg.Any<CancellationToken>())
-            .ThrowsAsync(new InvalidOperationException("unexpected failure"));
+        dynamo.Configure()
+            .PutItemAsync(new PutItemRequest(), CancellationToken.None)
+            .Throws(new InvalidOperationException("unexpected failure"));
 
         // Act
-        var act = async () => await sut.AcquireLockAsync(resourceId, ownerId, CancellationToken.None);
+        var act = async () => await sut.AcquireLockAsync(resourceId, ownerId, TestContext.Current.CancellationToken);
 
         // Assert
         await act.Should().ThrowAsync<InvalidOperationException>();
@@ -108,20 +112,22 @@ public class DynamoDbDistributedLockTests
     }
 
     [Theory]
-    [DynamoDbDistributedLockAutoData]
+    [Compose<DynamoDbDistributedLockGeneratedTestDoubleProfile>]
     public async Task ReleaseLockAsync_WhenOwnerMatches_ShouldReturnTrue(
-        [Frozen] IAmazonDynamoDB dynamo,
+        [Shared] Meter meter,
+        [Shared] IAmazonDynamoDB dynamo,
         DynamoDbDistributedLock sut,
         TestMetricAggregator<int> metricAggregator,
         string resourceId,
         string ownerId)
     {
         // Arrange
-        dynamo.DeleteItemAsync(Arg.Any<DeleteItemRequest>(), Arg.Any<CancellationToken>())
-            .Returns(new DeleteItemResponse());
+        dynamo.Configure()
+            .DeleteItemAsync(new DeleteItemRequest(), CancellationToken.None)
+            .Returns(Task.FromResult(new DeleteItemResponse()));
 
         // Act
-        var result = await sut.ReleaseLockAsync(resourceId, ownerId, CancellationToken.None);
+        var result = await sut.ReleaseLockAsync(resourceId, ownerId, TestContext.Current.CancellationToken);
 
         // Assert
         result.Should().BeTrue();
@@ -130,20 +136,22 @@ public class DynamoDbDistributedLockTests
     }
 
     [Theory]
-    [DynamoDbDistributedLockAutoData]
+    [Compose<DynamoDbDistributedLockGeneratedTestDoubleProfile>]
     public async Task ReleaseLockAsync_WhenOwnerDoesNotMatch_ShouldReturnFalse(
-        [Frozen] IAmazonDynamoDB dynamo,
+        [Shared] Meter meter,
+        [Shared] IAmazonDynamoDB dynamo,
         DynamoDbDistributedLock sut,
         TestMetricAggregator<int> metricAggregator,
         string resourceId,
         string ownerId)
     {
         // Arrange
-        dynamo.DeleteItemAsync(Arg.Any<DeleteItemRequest>(), Arg.Any<CancellationToken>())
-            .ThrowsAsync(new ConditionalCheckFailedException("owner mismatch"));
+        dynamo.Configure()
+            .DeleteItemAsync(new DeleteItemRequest(), CancellationToken.None)
+            .Throws(new ConditionalCheckFailedException("owner mismatch"));
 
         // Act
-        var result = await sut.ReleaseLockAsync(resourceId, ownerId, CancellationToken.None);
+        var result = await sut.ReleaseLockAsync(resourceId, ownerId, TestContext.Current.CancellationToken);
 
         // Assert
         result.Should().BeFalse();
@@ -152,20 +160,22 @@ public class DynamoDbDistributedLockTests
     }
 
     [Theory]
-    [DynamoDbDistributedLockAutoData]
+    [Compose<DynamoDbDistributedLockGeneratedTestDoubleProfile>]
     public async Task ReleaseLockAsync_WhenUnexpectedExceptionOccurs_ShouldThrow(
-        [Frozen] IAmazonDynamoDB dynamo,
+        [Shared] Meter meter,
+        [Shared] IAmazonDynamoDB dynamo,
         DynamoDbDistributedLock sut,
         TestMetricAggregator<int> metricAggregator,
         string resourceId,
         string ownerId)
     {
         // Arrange
-        dynamo.DeleteItemAsync(Arg.Any<DeleteItemRequest>(), Arg.Any<CancellationToken>())
-            .ThrowsAsync(new InvalidOperationException("unexpected failure"));
+        dynamo.Configure()
+            .DeleteItemAsync(new DeleteItemRequest(), CancellationToken.None)
+            .Throws(new InvalidOperationException("unexpected failure"));
 
         // Act
-        var act = async () => await sut.ReleaseLockAsync(resourceId, ownerId, CancellationToken.None);
+        var act = async () => await sut.ReleaseLockAsync(resourceId, ownerId, TestContext.Current.CancellationToken);
 
         // Assert
         await act.Should().ThrowAsync<InvalidOperationException>();
@@ -174,20 +184,22 @@ public class DynamoDbDistributedLockTests
     }
 
     [Theory]
-    [DynamoDbDistributedLockAutoData]
+    [Compose<DynamoDbDistributedLockGeneratedTestDoubleProfile>]
     public async Task AcquireLockHandleAsync_WhenLockIsAvailable_ShouldReturnHandle(
-        [Frozen] IAmazonDynamoDB dynamo,
+        [Shared] Meter meter,
+        [Shared] IAmazonDynamoDB dynamo,
         DynamoDbDistributedLock sut,
         TestMetricAggregator<int> metricAggregator,
         string resourceId,
         string ownerId)
     {
         // Arrange
-        dynamo.PutItemAsync(Arg.Any<PutItemRequest>(), Arg.Any<CancellationToken>())
-            .Returns(new PutItemResponse());
+        dynamo.Configure()
+            .PutItemAsync(new PutItemRequest(), CancellationToken.None)
+            .Returns(Task.FromResult(new PutItemResponse()));
 
         // Act
-        var result = await sut.AcquireLockHandleAsync(resourceId, ownerId, CancellationToken.None);
+        var result = await sut.AcquireLockHandleAsync(resourceId, ownerId, TestContext.Current.CancellationToken);
 
         // Assert
         result.Should().NotBeNull();
@@ -195,123 +207,163 @@ public class DynamoDbDistributedLockTests
         result.OwnerId.Should().Be(ownerId);
         result.IsAcquired.Should().BeTrue();
         result.ExpiresAt.Should().BeAfter(DateTimeOffset.UtcNow);
-        
+
         metricAggregator.Collect(MetricNames.LockAcquire).Should().HaveCount(1);
         metricAggregator.Collect(MetricNames.LockAcquireFailed).Should().HaveCount(0);
     }
 
     [Theory]
-    [DynamoDbDistributedLockAutoData]
+    [Compose<DynamoDbDistributedLockGeneratedTestDoubleProfile>]
     public async Task AcquireLockHandleAsync_WhenLockAlreadyExists_ShouldReturnNull(
-        [Frozen] IAmazonDynamoDB dynamo,
+        [Shared] Meter meter,
+        [Shared] IAmazonDynamoDB dynamo,
         DynamoDbDistributedLock sut,
         TestMetricAggregator<int> metricAggregator,
         string resourceId,
         string ownerId)
     {
         // Arrange
-        dynamo.PutItemAsync(Arg.Any<PutItemRequest>(), Arg.Any<CancellationToken>())
-            .ThrowsAsync(new ConditionalCheckFailedException("lock exists"));
+        dynamo.Configure()
+            .PutItemAsync(new PutItemRequest(), CancellationToken.None)
+            .Throws(new ConditionalCheckFailedException("lock exists"));
 
         // Act
-        var result = await sut.AcquireLockHandleAsync(resourceId, ownerId, CancellationToken.None);
+        var result = await sut.AcquireLockHandleAsync(resourceId, ownerId, TestContext.Current.CancellationToken);
 
         // Assert
         result.Should().BeNull();
-        
+
         metricAggregator.Collect(MetricNames.LockAcquire).Should().HaveCount(0);
         metricAggregator.Collect(MetricNames.LockAcquireFailed).Should().HaveCount(1);
     }
 
     [Theory]
-    [DynamoDbDistributedLockAutoData]
+    [Compose<DynamoDbDistributedLockGeneratedTestDoubleProfile>]
     public async Task AcquireLockHandleAsync_WhenUnexpectedExceptionOccurs_ShouldThrow(
-        [Frozen] IAmazonDynamoDB dynamo,
+        [Shared] Meter meter,
+        [Shared] IAmazonDynamoDB dynamo,
         DynamoDbDistributedLock sut,
         TestMetricAggregator<int> metricAggregator,
         string resourceId,
         string ownerId)
     {
         // Arrange
-        dynamo.PutItemAsync(Arg.Any<PutItemRequest>(), Arg.Any<CancellationToken>())
-            .ThrowsAsync(new InvalidOperationException("unexpected failure"));
+        dynamo.Configure()
+            .PutItemAsync(new PutItemRequest(), CancellationToken.None)
+            .Throws(new InvalidOperationException("unexpected failure"));
 
         // Act
-        var act = async () => await sut.AcquireLockHandleAsync(resourceId, ownerId, CancellationToken.None);
+        var act = async () => await sut.AcquireLockHandleAsync(resourceId, ownerId, TestContext.Current.CancellationToken);
 
         // Assert
         await act.Should().ThrowAsync<InvalidOperationException>();
-        
+
         metricAggregator.Collect(MetricNames.LockAcquire).Should().HaveCount(0);
         metricAggregator.Collect(MetricNames.LockAcquireFailed).Should().HaveCount(1);
     }
 
+    // ADR-0044 Amendment 21 (overload-safe argument matching): asserts on
+    // DeleteItemRequest.ConditionExpression/ExpressionAttributeValues *content* via the new
+    // DeleteItemAsyncMatching(...) surface, which shares DeleteItemAsync's own entries/call log -
+    // the discriminator-only Configure() below still answers every real call regardless of content;
+    // Verify() below independently filters by the predicate.
     [Theory]
-    [DynamoDbDistributedLockAutoData]
+    [Compose<DynamoDbDistributedLockGeneratedTestDoubleProfile>]
     public async Task AcquireLockHandleAsync_DisposeHandle_ShouldCallReleaseLock(
-        [Frozen] IAmazonDynamoDB dynamo,
+        [Shared] Meter meter,
+        [Shared] IAmazonDynamoDB dynamo,
         DynamoDbDistributedLock sut,
         TestMetricAggregator<int> metricAggregator,
         string resourceId,
         string ownerId)
     {
         // Arrange
-        dynamo.PutItemAsync(Arg.Any<PutItemRequest>(), Arg.Any<CancellationToken>())
-            .Returns(new PutItemResponse());
-        dynamo.DeleteItemAsync(Arg.Any<DeleteItemRequest>(), Arg.Any<CancellationToken>())
-            .Returns(new DeleteItemResponse());
+        dynamo.Configure()
+            .PutItemAsync(new PutItemRequest(), CancellationToken.None)
+            .Returns(Task.FromResult(new PutItemResponse()));
+        dynamo.Configure()
+            .DeleteItemAsync(new DeleteItemRequest(), CancellationToken.None)
+            .Returns(Task.FromResult(new DeleteItemResponse()));
 
         // Act
-        var handle = await sut.AcquireLockHandleAsync(resourceId, ownerId, CancellationToken.None);
+        var handle = await sut.AcquireLockHandleAsync(resourceId, ownerId, TestContext.Current.CancellationToken);
         await handle!.DisposeAsync();
 
         // Assert
-        await dynamo.Received(1).DeleteItemAsync(
-            Arg.Is<DeleteItemRequest>(req => 
-                req.ConditionExpression.Contains("ownerId = :owner") &&
-                req.ExpressionAttributeValues.ContainsKey(":owner") &&
-                req.ExpressionAttributeValues[":owner"].S == ownerId),
-            Arg.Any<CancellationToken>());
-        
+        dynamo.Verify()
+            .DeleteItemAsyncMatching(
+                Match.Is<DeleteItemRequest>(req =>
+                    req.ConditionExpression.Contains("ownerId = :owner") &&
+                    req.ExpressionAttributeValues.ContainsKey(":owner") &&
+                    req.ExpressionAttributeValues[":owner"].S == ownerId),
+                Match.Any<CancellationToken>())
+            .Once();
+
         metricAggregator.Collect(MetricNames.LockAcquire).Should().HaveCount(1);
         metricAggregator.Collect(MetricNames.LockAcquireFailed).Should().HaveCount(0);
     }
-    
+
     [Theory]
-    [DynamoDbDistributedLockAutoData]
+    [Compose<DynamoDbDistributedLockGeneratedTestDoubleProfile>]
     public async Task AcquireLockAsync_WhenLockIsAvailable_TimersRecordMetrics(
-        [Frozen] IAmazonDynamoDB dynamo, TestMetricAggregator<double> metricAggregator,
+        [Shared] Meter meter, [Shared] IAmazonDynamoDB dynamo, TestMetricAggregator<double> metricAggregator,
         DynamoDbDistributedLock sut, string resourceId, string ownerId)
     {
-        // Arrange
-        dynamo.PutItemAsync(Arg.Any<PutItemRequest>(), Arg.Any<CancellationToken>())
-            .Returns(async _ =>
-            {
-                // simulate some delay to ensure timer captures it
-                await Task.Delay(TimeSpan.FromMilliseconds(5));
-                return new PutItemResponse();
-            });
+        // No argument matching or per-call sequencing needed here - a literal discriminator argument
+        // selects the (PutItemRequest, CancellationToken)/(DeleteItemRequest, CancellationToken)
+        // overload. Each Configure() call is deferred until immediately before the SUT call it backs -
+        // unlike the retry-loop tests, these are two separate, test-controlled SUT operations, so
+        // reconfiguring between them is enough for the RIGHT response to be in play for each call.
+        //
+        // Codex review (LayeredCraft/dynamodb-distributed-lock#76): Compono.TestDoubles has no
+        // invocation-aware callback - `DelayedPutItemResponseAsync()`/`DelayedDeleteItemResponseAsync()`
+        // are eagerly invoked (and their own Task.Delay starts counting) at Configure() time, one
+        // statement BEFORE the SUT actually awaits them, not when the SUT invokes the double. Any
+        // scheduling/composition overhead between that Configure() call and the SUT's own internal
+        // stopwatch starting eats directly into the delay budget, which a tight ~5ms delay against a
+        // ">4" threshold has essentially no margin to absorb - a real, observed CI flake (2.21ms
+        // measured, not a lock-acquisition correctness bug). Compono.NSubstitute's invocation-aware
+        // `Returns(callInfo => ...)` would eliminate the race entirely, but reintroducing it here
+        // would partially undo the very NSubstitute-removal this migration is about. Widening the
+        // delay/threshold margin instead: even several milliseconds of Arrange-to-await overhead can't
+        // push the measured duration below a threshold this far under the configured delay.
 
-        dynamo.DeleteItemAsync(Arg.Any<DeleteItemRequest>(), Arg.Any<CancellationToken>())
-            .Returns(async _ =>
-            {
-                // simulate some delay to ensure timer captures it
-                await Task.Delay(TimeSpan.FromMilliseconds(5));
-                return new DeleteItemResponse();
-            });
+        // Arrange + Act (acquire)
+        dynamo.Configure()
+            .PutItemAsync(new PutItemRequest(), CancellationToken.None)
+            .Returns(DelayedPutItemResponseAsync());
+        var acquired = await sut.AcquireLockAsync(resourceId, ownerId, TestContext.Current.CancellationToken);
 
-        // Act
-        var acquired = await sut.AcquireLockAsync(resourceId, ownerId, CancellationToken.None);
-        var released = await sut.ReleaseLockAsync(resourceId, ownerId, CancellationToken.None);
+        // Arrange + Act (release)
+        dynamo.Configure()
+            .DeleteItemAsync(new DeleteItemRequest(), CancellationToken.None)
+            .Returns(DelayedDeleteItemResponseAsync());
+        var released = await sut.ReleaseLockAsync(resourceId, ownerId, TestContext.Current.CancellationToken);
 
         // Assert
         acquired.Should().BeTrue();
         released.Should().BeTrue();
-        
+
         var acquisitionTimer = metricAggregator.Collect(MetricNames.LockAcquireTimer).Single();
-        acquisitionTimer.Value.Should().BeGreaterThan(4);
-        
+        acquisitionTimer.Value.Should().BeGreaterThan(20);
+
         var releaseTimer = metricAggregator.Collect(MetricNames.LockReleaseTimer).Single();
-        releaseTimer.Value.Should().BeGreaterThan(4);
+        releaseTimer.Value.Should().BeGreaterThan(20);
+    }
+
+    private static async Task<PutItemResponse> DelayedPutItemResponseAsync()
+    {
+        // simulate some delay to ensure the timer above captures it - see the caller's own comment
+        // for why this needs a generous margin over the ">20" assertion threshold.
+        await Task.Delay(TimeSpan.FromMilliseconds(100));
+        return new PutItemResponse();
+    }
+
+    private static async Task<DeleteItemResponse> DelayedDeleteItemResponseAsync()
+    {
+        // simulate some delay to ensure the timer above captures it - see the caller's own comment
+        // for why this needs a generous margin over the ">20" assertion threshold.
+        await Task.Delay(TimeSpan.FromMilliseconds(100));
+        return new DeleteItemResponse();
     }
 }

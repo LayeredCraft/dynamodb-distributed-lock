@@ -1,15 +1,14 @@
-using AutoFixture.Xunit3;
-using DynamoDb.DistributedLock.Tests.TestKit.Attributes;
 using AwesomeAssertions;
-using NSubstitute;
-using NSubstitute.ExceptionExtensions;
+using Compono;
+using Compono.XunitV3;
+using DynamoDb.DistributedLock.Tests.TestKit.Profiles;
 
 namespace DynamoDb.DistributedLock.Tests;
 
 public class DistributedLockHandleTests
 {
     [Theory]
-    [DynamoDbDistributedLockAutoData]
+    [Compose<DynamoDbDistributedLockGeneratedTestDoubleProfile>]
     public void Constructor_WhenLockServiceIsNull_ShouldThrowArgumentNullException(
         string resourceId,
         string ownerId,
@@ -22,7 +21,7 @@ public class DistributedLockHandleTests
     }
 
     [Theory]
-    [DynamoDbDistributedLockAutoData]
+    [Compose<DynamoDbDistributedLockGeneratedTestDoubleProfile>]
     public void Constructor_WhenResourceIdIsNull_ShouldThrowArgumentNullException(
         IDynamoDbDistributedLock lockService,
         string ownerId,
@@ -35,7 +34,7 @@ public class DistributedLockHandleTests
     }
 
     [Theory]
-    [DynamoDbDistributedLockAutoData]
+    [Compose<DynamoDbDistributedLockGeneratedTestDoubleProfile>]
     public void Constructor_WhenOwnerIdIsNull_ShouldThrowArgumentNullException(
         IDynamoDbDistributedLock lockService,
         string resourceId,
@@ -48,7 +47,7 @@ public class DistributedLockHandleTests
     }
 
     [Theory]
-    [DynamoDbDistributedLockAutoData]
+    [Compose<DynamoDbDistributedLockGeneratedTestDoubleProfile>]
     public void Properties_ShouldReturnConstructorValues(
         IDynamoDbDistributedLock lockService,
         string resourceId,
@@ -63,7 +62,7 @@ public class DistributedLockHandleTests
     }
 
     [Theory]
-    [DynamoDbDistributedLockAutoData]
+    [Compose<DynamoDbDistributedLockGeneratedTestDoubleProfile>]
     public void IsAcquired_WhenNotDisposedAndNotExpired_ShouldReturnTrue(
         IDynamoDbDistributedLock lockService,
         string resourceId,
@@ -76,7 +75,7 @@ public class DistributedLockHandleTests
     }
 
     [Theory]
-    [DynamoDbDistributedLockAutoData]
+    [Compose<DynamoDbDistributedLockGeneratedTestDoubleProfile>]
     public void IsAcquired_WhenExpired_ShouldReturnFalse(
         IDynamoDbDistributedLock lockService,
         string resourceId,
@@ -89,7 +88,7 @@ public class DistributedLockHandleTests
     }
 
     [Theory]
-    [DynamoDbDistributedLockAutoData]
+    [Compose<DynamoDbDistributedLockGeneratedTestDoubleProfile>]
     public async Task IsAcquired_WhenDisposed_ShouldReturnFalse(
         IDynamoDbDistributedLock lockService,
         string resourceId,
@@ -104,9 +103,9 @@ public class DistributedLockHandleTests
     }
 
     [Theory]
-    [DynamoDbDistributedLockAutoData]
+    [Compose<DynamoDbDistributedLockGeneratedTestDoubleProfile>]
     public async Task DisposeAsync_ShouldCallReleaseLockAsync(
-        [Frozen] IDynamoDbDistributedLock lockService,
+        IDynamoDbDistributedLock lockService,
         string resourceId,
         string ownerId,
         DateTimeOffset expiresAt)
@@ -115,13 +114,15 @@ public class DistributedLockHandleTests
 
         await handle.DisposeAsync();
 
-        await lockService.Received(1).ReleaseLockAsync(resourceId, ownerId, Arg.Any<CancellationToken>());
+        lockService.Verify()
+            .ReleaseLockAsync(resourceId, ownerId, Match.Any<CancellationToken>())
+            .Once();
     }
 
     [Theory]
-    [DynamoDbDistributedLockAutoData]
+    [Compose<DynamoDbDistributedLockGeneratedTestDoubleProfile>]
     public async Task DisposeAsync_WhenCalledMultipleTimes_ShouldOnlyCallReleaseLockOnce(
-        [Frozen] IDynamoDbDistributedLock lockService,
+        IDynamoDbDistributedLock lockService,
         string resourceId,
         string ownerId,
         DateTimeOffset expiresAt)
@@ -132,19 +133,22 @@ public class DistributedLockHandleTests
         await handle.DisposeAsync();
         await handle.DisposeAsync();
 
-        await lockService.Received(1).ReleaseLockAsync(resourceId, ownerId, Arg.Any<CancellationToken>());
+        lockService.Verify()
+            .ReleaseLockAsync(resourceId, ownerId, Match.Any<CancellationToken>())
+            .Once();
     }
 
     [Theory]
-    [DynamoDbDistributedLockAutoData]
+    [Compose<DynamoDbDistributedLockGeneratedTestDoubleProfile>]
     public async Task DisposeAsync_WhenReleaseLockThrows_ShouldSwallowException(
-        [Frozen] IDynamoDbDistributedLock lockService,
+        IDynamoDbDistributedLock lockService,
         string resourceId,
         string ownerId,
         DateTimeOffset expiresAt)
     {
-        lockService.ReleaseLockAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>())
-            .ThrowsAsync(new InvalidOperationException("Test exception"));
+        lockService.Configure()
+            .ReleaseLockAsync(Match.Any<string>(), Match.Any<string>(), Match.Any<CancellationToken>())
+            .Throws(new InvalidOperationException("Test exception"));
 
         var handle = new DistributedLockHandle(lockService, resourceId, ownerId, expiresAt);
 
