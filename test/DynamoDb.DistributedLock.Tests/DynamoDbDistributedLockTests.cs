@@ -53,7 +53,7 @@ public class DynamoDbDistributedLockTests
     [Theory]
     [Compose<DynamoDbDistributedLockGeneratedTestDoubleProfile>]
     public async Task AcquireLockAsync_WhenLockIsAvailable_ShouldReturnTrue(
-        [Shared] Meter meter, [Shared] IAmazonDynamoDB dynamo, TestMetricAggregator<int> metricAggregator,
+        [Shared] IAmazonDynamoDB dynamo, TestMetricAggregator<int> metricAggregator,
         DynamoDbDistributedLock sut, string resourceId, string ownerId)
     {
         // Arrange - no argument matching needed (a blanket response regardless of args); a literal
@@ -74,7 +74,7 @@ public class DynamoDbDistributedLockTests
     [Theory]
     [Compose<DynamoDbDistributedLockGeneratedTestDoubleProfile>]
     public async Task AcquireLockAsync_WhenLockAlreadyExists_ShouldReturnFalse(
-        [Shared] Meter meter, [Shared] IAmazonDynamoDB dynamo, TestMetricAggregator<int> metricAggregator,
+        [Shared] IAmazonDynamoDB dynamo, TestMetricAggregator<int> metricAggregator,
         DynamoDbDistributedLock sut, string resourceId, string ownerId)
     {
         // Arrange
@@ -94,7 +94,7 @@ public class DynamoDbDistributedLockTests
     [Theory]
     [Compose<DynamoDbDistributedLockGeneratedTestDoubleProfile>]
     public async Task AcquireLockAsync_WhenUnexpectedExceptionOccurs_ShouldThrow(
-        [Shared] Meter meter, [Shared] IAmazonDynamoDB dynamo, TestMetricAggregator<int> metricAggregator,
+        [Shared] IAmazonDynamoDB dynamo, TestMetricAggregator<int> metricAggregator,
         DynamoDbDistributedLock sut, string resourceId, string ownerId)
     {
         // Arrange
@@ -114,7 +114,6 @@ public class DynamoDbDistributedLockTests
     [Theory]
     [Compose<DynamoDbDistributedLockGeneratedTestDoubleProfile>]
     public async Task ReleaseLockAsync_WhenOwnerMatches_ShouldReturnTrue(
-        [Shared] Meter meter,
         [Shared] IAmazonDynamoDB dynamo,
         DynamoDbDistributedLock sut,
         TestMetricAggregator<int> metricAggregator,
@@ -138,7 +137,6 @@ public class DynamoDbDistributedLockTests
     [Theory]
     [Compose<DynamoDbDistributedLockGeneratedTestDoubleProfile>]
     public async Task ReleaseLockAsync_WhenOwnerDoesNotMatch_ShouldReturnFalse(
-        [Shared] Meter meter,
         [Shared] IAmazonDynamoDB dynamo,
         DynamoDbDistributedLock sut,
         TestMetricAggregator<int> metricAggregator,
@@ -162,7 +160,6 @@ public class DynamoDbDistributedLockTests
     [Theory]
     [Compose<DynamoDbDistributedLockGeneratedTestDoubleProfile>]
     public async Task ReleaseLockAsync_WhenUnexpectedExceptionOccurs_ShouldThrow(
-        [Shared] Meter meter,
         [Shared] IAmazonDynamoDB dynamo,
         DynamoDbDistributedLock sut,
         TestMetricAggregator<int> metricAggregator,
@@ -186,7 +183,6 @@ public class DynamoDbDistributedLockTests
     [Theory]
     [Compose<DynamoDbDistributedLockGeneratedTestDoubleProfile>]
     public async Task AcquireLockHandleAsync_WhenLockIsAvailable_ShouldReturnHandle(
-        [Shared] Meter meter,
         [Shared] IAmazonDynamoDB dynamo,
         DynamoDbDistributedLock sut,
         TestMetricAggregator<int> metricAggregator,
@@ -215,7 +211,6 @@ public class DynamoDbDistributedLockTests
     [Theory]
     [Compose<DynamoDbDistributedLockGeneratedTestDoubleProfile>]
     public async Task AcquireLockHandleAsync_WhenLockAlreadyExists_ShouldReturnNull(
-        [Shared] Meter meter,
         [Shared] IAmazonDynamoDB dynamo,
         DynamoDbDistributedLock sut,
         TestMetricAggregator<int> metricAggregator,
@@ -240,7 +235,6 @@ public class DynamoDbDistributedLockTests
     [Theory]
     [Compose<DynamoDbDistributedLockGeneratedTestDoubleProfile>]
     public async Task AcquireLockHandleAsync_WhenUnexpectedExceptionOccurs_ShouldThrow(
-        [Shared] Meter meter,
         [Shared] IAmazonDynamoDB dynamo,
         DynamoDbDistributedLock sut,
         TestMetricAggregator<int> metricAggregator,
@@ -270,7 +264,6 @@ public class DynamoDbDistributedLockTests
     [Theory]
     [Compose<DynamoDbDistributedLockGeneratedTestDoubleProfile>]
     public async Task AcquireLockHandleAsync_DisposeHandle_ShouldCallReleaseLock(
-        [Shared] Meter meter,
         [Shared] IAmazonDynamoDB dynamo,
         DynamoDbDistributedLock sut,
         TestMetricAggregator<int> metricAggregator,
@@ -306,7 +299,7 @@ public class DynamoDbDistributedLockTests
     [Theory]
     [Compose<DynamoDbDistributedLockGeneratedTestDoubleProfile>]
     public async Task AcquireLockAsync_WhenLockIsAvailable_TimersRecordMetrics(
-        [Shared] Meter meter, [Shared] IAmazonDynamoDB dynamo, TestMetricAggregator<double> metricAggregator,
+        [Shared] IAmazonDynamoDB dynamo, TestMetricAggregator<double> metricAggregator,
         DynamoDbDistributedLock sut, string resourceId, string ownerId)
     {
         // No argument matching or per-call sequencing needed here - a literal discriminator argument
