@@ -99,7 +99,7 @@ public class ExponentialBackoffRetryPolicyTests
     [Theory]
     [Compose<DynamoDbDistributedLockGeneratedTestDoubleProfile>]
     public async Task ExecuteAsync_WhenOperationFailsAndShouldRetry_ShouldRetryUpToMaxAttempts(
-        [Shared] Meter meter, RetryOptions options, ILockMetrics lockMetrics, TestMetricAggregator<int> metricAggregator)
+        RetryOptions options, ILockMetrics lockMetrics, TestMetricAggregator<int> metricAggregator)
     {
         options.MaxAttempts = 3;
         options.BaseDelay = TimeSpan.FromMilliseconds(1); // Fast test
@@ -126,7 +126,6 @@ public class ExponentialBackoffRetryPolicyTests
     [Theory]
     [Compose<DynamoDbDistributedLockGeneratedTestDoubleProfile>]
     public async Task ExecuteAsync_WhenOperationSucceedsAfterRetries_ShouldReturnResult(
-        [Shared] Meter meter,
         RetryOptions options,
         ILockMetrics lockMetrics,
         TestMetricAggregator<int> metricAggregator,
